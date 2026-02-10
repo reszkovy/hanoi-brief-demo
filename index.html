@@ -47,14 +47,14 @@
         input[type="number"],
         textarea,
         select {
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            padding: 8px 12px;
-            font-size: 14px;
+            border-radius: 12px;
+            border: 1px solid #d2d2d7;
+            padding: 13px 16px;
+            font-size: 16px;
             line-height: 1.5;
-            transition: all 150ms ease;
+            transition: all 200ms ease;
             width: 100%;
-            background-color: #fafafa;
+            background-color: #fbfbfd;
             color: #1d1d1f;
             outline: none;
         }
@@ -68,7 +68,7 @@
         select:focus {
             border-color: #E85D2C;
             background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(232, 93, 44, 0.08);
+            box-shadow: 0 0 0 4px rgba(232, 93, 44, 0.1);
         }
 
         textarea {
@@ -121,11 +121,12 @@
 
         .radio-card,
         .checkbox-card {
-            padding: 8px 10px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1.5px solid #d2d2d7;
             cursor: pointer;
-            transition: all 150ms ease;
+            transition: all 200ms ease;
+            background: #fbfbfd;
         }
 
         .radio-card:hover,
@@ -135,31 +136,34 @@
 
         .radio-card.selected {
             border-color: #E85D2C;
-            background: rgba(232, 93, 44, 0.08);
+            background: rgba(232, 93, 44, 0.06);
+            box-shadow: 0 0 0 3px rgba(232, 93, 44, 0.08);
         }
 
         .checkbox-card.selected {
             border-color: #E85D2C;
-            background: rgba(232, 93, 44, 0.08);
+            background: rgba(232, 93, 44, 0.06);
+            box-shadow: 0 0 0 3px rgba(232, 93, 44, 0.08);
         }
 
         .section-header {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 11px;
+            padding-top: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e5e5ea;
+            font-size: 12px;
             line-height: 1.4;
             font-weight: 600;
             color: #E85D2C;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
+            margin-top: 0.5rem;
         }
 
         .section-subtext {
-            font-size: 12px;
-            line-height: 1.3;
+            font-size: 13px;
+            line-height: 1.4;
             color: #86868b;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .nav-dot {
@@ -181,9 +185,8 @@
         }
 
         .progress-bar {
-            height: 3px;
-            background-color: #e5e7eb;
-            border-radius: 999px;
+            height: 2px;
+            background-color: #f0f0f0;
             overflow: hidden;
         }
 
@@ -888,7 +891,7 @@
                     </div>
 
                     {/* Steps */}
-                    <div className="max-w-2xl mx-auto px-4 py-6">
+                    <div className="max-w-2xl mx-auto px-4 py-8 sm:py-10">
                         {currentStep === 0 && (
                             <Step0 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
                         )}
@@ -921,26 +924,26 @@
                         )}
 
                         {/* Navigation */}
-                        <div className="mt-5 space-y-3">
+                        <div className="mt-8 space-y-4">
                             <div className="flex gap-4">
                                 <button
                                     onClick={prevStep}
                                     disabled={currentStep === 0}
-                                    className="px-5 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-400 transition"
+                                    className="px-6 py-3 rounded-xl border border-gray-300 text-base font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-400 transition"
                                 >
                                     {t.previous}
                                 </button>
                                 {currentStep < 9 ? (
                                     <button
                                         onClick={nextStep}
-                                        className="ml-auto px-5 py-2.5 rounded-xl text-sm bg-[#E85D2C] text-white font-medium hover:bg-[#d64a1f] transition"
+                                        className="ml-auto px-8 py-3 rounded-xl text-base bg-[#E85D2C] text-white font-medium hover:bg-[#d64a1f] transition shadow-sm"
                                     >
                                         {t.next}
                                     </button>
                                 ) : (
                                     <button
                                         onClick={submitBrief}
-                                        className="ml-auto px-6 py-2.5 rounded-xl text-sm bg-green-600 text-white font-medium hover:bg-green-700 transition"
+                                        className="ml-auto px-8 py-3 rounded-xl text-base bg-green-600 text-white font-medium hover:bg-green-700 transition shadow-sm"
                                     >
                                         {t.submitBrief}
                                     </button>
@@ -1059,7 +1062,7 @@
                         </select>
                     </FormField>
                     <FormField label={t.urgencyLevel}>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {['standard', 'high', 'critical'].map(level => (
                                 <label key={level} className={`radio-card block cursor-pointer ${data.urgency_level === level ? 'selected' : ''}`}>
                                     <input type="radio" name="urgency" value={level} checked={data.urgency_level === level} onChange={(e) => updateField('urgency_level', e.target.value)} style={{ display: 'none' }} />
@@ -1127,7 +1130,7 @@
                         <textarea placeholder={t.competitorWebsitesPlaceholder} value={data.competitor_websites || ''} onChange={(e) => updateField('competitor_websites', e.target.value)} />
                     </FormField>
                     <FormField label={t.marketSaturation}>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {['low', 'medium', 'high', 'veryhigh'].map(level => (
                                 <label key={level} className={`radio-card block cursor-pointer ${data.market_saturation === level ? 'selected' : ''}`}>
                                     <input type="radio" name="saturation" value={level} checked={data.market_saturation === level} onChange={(e) => updateField('market_saturation', e.target.value)} style={{ display: 'none' }} />
@@ -1462,7 +1465,7 @@
                     </FormField>
 
                     <FormField label={t.hasContentResources}>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {['yes', 'no', 'partial'].map(option => (
                                 <label key={option} className={`radio-card block cursor-pointer ${data.has_content_resources === option ? 'selected' : ''}`}>
                                     <input type="radio" name="content" value={option} checked={data.has_content_resources === option} onChange={(e) => updateField('has_content_resources', e.target.value)} style={{ display: 'none' }} />
@@ -1475,7 +1478,7 @@
                     </FormField>
 
                     <FormField label={t.hasPhotosVideos}>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {['yes', 'no', 'partial'].map(option => (
                                 <label key={option} className={`radio-card block cursor-pointer ${data.has_photos_videos === option ? 'selected' : ''}`}>
                                     <input type="radio" name="photos" value={option} checked={data.has_photos_videos === option} onChange={(e) => updateField('has_photos_videos', e.target.value)} style={{ display: 'none' }} />
@@ -1488,7 +1491,7 @@
                     </FormField>
 
                     <FormField label={t.hasBrandAssets}>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {['complete', 'partial', 'create'].map(option => (
                                 <label key={option} className={`radio-card block cursor-pointer ${data.has_brand_assets === option ? 'selected' : ''}`}>
                                     <input type="radio" name="assets" value={option} checked={data.has_brand_assets === option} onChange={(e) => updateField('has_brand_assets', e.target.value)} style={{ display: 'none' }} />
@@ -1516,7 +1519,7 @@
                         <input type="text" placeholder={t.marketingBudgetPlaceholder} value={data.marketing_budget || ''} onChange={(e) => updateField('marketing_budget', e.target.value)} />
                     </FormField>
                     <FormField label={t.budgetFlexibility}>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {['rigid', 'partial', 'full'].map(option => (
                                 <label key={option} className={`radio-card block cursor-pointer ${data.budget_flexibility === option ? 'selected' : ''}`}>
                                     <input type="radio" name="flexibility" value={option} checked={data.budget_flexibility === option} onChange={(e) => updateField('budget_flexibility', e.target.value)} style={{ display: 'none' }} />
@@ -1555,10 +1558,10 @@
 
         function StepCard({ title, description, children }) {
             return (
-                <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100/80">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-0.5" style={{letterSpacing: '-0.01em'}}>{title}</h2>
-                    <p className="text-gray-400 text-sm mb-4">{description}</p>
-                    <div className="space-y-3">
+                <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100/80" style={{boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)'}}>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-1" style={{letterSpacing: '-0.02em'}}>{title}</h2>
+                    <p className="text-gray-400 text-sm mb-6">{description}</p>
+                    <div className="space-y-5">
                         {children}
                     </div>
                 </div>
@@ -1568,7 +1571,7 @@
         function FormField({ label, required, optional, children }) {
             return (
                 <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5" style={{letterSpacing: '0.02em'}}>
+                    <label className="block text-sm font-medium text-gray-600 mb-2" style={{letterSpacing: '0.01em'}}>
                         {label}
                         {required && <span className="text-red-500 ml-0.5">*</span>}
                         {optional && <span className="text-gray-400 text-xs ml-1.5">(opcjonalne)</span>}
