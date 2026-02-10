@@ -810,6 +810,23 @@
             };
 
             const submitBrief = () => {
+                // Save to localStorage for admin panel
+                try {
+                    const existingBriefs = JSON.parse(localStorage.getItem('hanoi_briefs') || '[]');
+                    const newBrief = {
+                        id: Date.now(),
+                        submittedAt: new Date().toISOString(),
+                        projectName: formData.step0.projectName || formData.step0.project_name || 'Bez nazwy',
+                        companyName: formData.step1.companyName || formData.step1.company_name || '—',
+                        briefType: formData.step0.briefType || formData.step0.brief_type || 'other',
+                        urgencyLevel: formData.step9.urgencyLevel || formData.step9.urgency_level || 'standard',
+                        formData: formData
+                    };
+                    existingBriefs.push(newBrief);
+                    localStorage.setItem('hanoi_briefs', JSON.stringify(existingBriefs));
+                } catch (e) {
+                    console.warn('Could not save brief to localStorage:', e);
+                }
                 setIsSubmitted(true);
                 setCurrentStep(10);
             };
