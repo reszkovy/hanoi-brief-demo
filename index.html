@@ -11,7 +11,7 @@
     <style>
         * {
             --accent: #E85D2C;
-            --accent-light: rgba(232, 93, 44, 0.08); 
+            --accent-light: rgba(232, 93, 44, 0.08);
             --accent-lighter: rgba(232, 93, 44, 0.04);
         }
 
@@ -47,9 +47,16 @@
         input[type="number"],
         textarea,
         select {
-            @apply rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-0 px-4 py-3 text-base transition-all;
-            border-color: #e5e7eb;
-            focus-ring-color: #E85D2C;
+            border-radius: 0.75rem;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5rem;
+            transition: all 150ms ease;
+            width: 100%;
+            background-color: #fff;
+            color: #111827;
+            outline: none;
         }
 
         input[type="text"]:focus,
@@ -113,8 +120,11 @@
 
         .radio-card,
         .checkbox-card {
-            @apply p-3 rounded-xl border-2 cursor-pointer transition-all;
-            border-color: #e5e7eb;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 150ms ease;
         }
 
         .radio-card:hover,
@@ -133,16 +143,25 @@
         }
 
         .section-header {
-            @apply pt-6 pb-2 border-b border-gray-200 text-lg font-bold;
+            padding-top: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 700;
             color: #E85D2C;
         }
 
         .section-subtext {
-            @apply text-sm text-gray-500;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            color: #6b7280;
         }
 
         .nav-dot {
-            @apply rounded-full cursor-pointer transition-all;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 150ms ease;
             width: 8px;
             height: 8px;
             background-color: #e5e7eb;
