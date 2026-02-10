@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hanoi Brief Admin Panel</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .accent-color {
+            color: #E85D2C;
+        }
+
+        .accent-bg {
+            background-color: #E85D2C;
+        }
+
+        .accent-border {
+            border-color: #E85D2C;
+        }
+
+        .accent-hover:hover {
+            background-color: #E85D2C;
+            color: white;
+        }
+
+        .hanoi-logo-svg {
+            height: 32px;
+            width: auto;
+        }
+
+        .badge-primary {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #E85D2C;
+            color: white;
+        }
+
+        .badge-secondary {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .badge-urgency-high {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .badge-urgency-critical {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #d63031;
+            color: white;
+        }
+
+        .badge-urgency-standard {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #74b9ff;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .card-list {
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .card-list:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .slider-bar {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .slider-block {
+            width: 8px;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+        }
+
+        .slider-block.filled {
+            background-color: #E85D2C;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background-color: #E85D2C;
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        .field-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .field-value {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .field-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .tag-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #E85D2C;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        .button-primary {
+            padding: 10px 20px;
+            background-color: #E85D2C;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .button-primary:hover {
+            background-color: #d44a1f;
+            box-shadow: 0 2px 4px rgba(232, 93, 44, 0.3);
+        }
+
+        .button-secondary {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .button-secondary:hover {
+            background-color: #e8e8e8;
+        }
+
+        .button-danger {
+            padding: 10px 20px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .button-danger:hover {
+            background-color: #ff5252;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .lang-toggle {
+            display: flex;
+            gap: 6px;
+            background-color: #f0f0f0;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn.active {
+            background-color: white;
+            color: #E85D2C;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s ease;
+            margin-bottom: 24px;
+        }
+
+        .back-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .link-button {
+            color: #E85D2C;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .link-button:hover {
+            text-decoration: underline;
+        }
+
+        .nav-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: transparent;
+            border: none;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: #E85D2C;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .brief-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .brief-header-info {
+            flex: 1;
+        }
+
+        .brief-header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .brief-project-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .brief-company {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .brief-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body style="background-color: #f8f9fa; margin: 0;">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Translation data
+        const translations = {
+            pl: {
+                panelTitle: "Panel Admina",
+                formularz: "Formularz",
+                briefList: "Lista briefów",
+                back: "← Wróć do listy",
+                projectName: "Nazwa projektu",
+                company: "Firma",
+                briefType: "Typ briefu",
+                urgency: "Pilność",
+                submittedDate: "Data wysłania",
+                viewButton: "Podgląd",
+                deleteButton: "Usuń",
+                deleteBriefTitle: "Usunąć brief?",
+                deleteBriefText: "Tej akcji nie można cofnąć. Brief zostanie trwale usunięty.",
+                cancelButton: "Anuluj",
+                confirmButton: "Usuń",
+                noData: "—",
+                briefSections: {
+                    0: "Typ briefu i przegląd projektu",
+                    1: "Prezentacja firmy",
+                    2: "Rynek i konkurencja",
+                    3: "Sytuacja brandingu",
+                    4: "Produkt i oferta",
+                    5: "Grupa docelowa",
+                    6: "Obietnica marki i pozycjonowanie",
+                    7: "Wytyczne projektowe",
+                    8: "Strona internetowa",
+                    9: "Budget, harmonogram i notatki"
+                },
+                fieldLabels: {
+                    brief_type: "Typ briefu",
+                    project_name: "Nazwa projektu",
+                    project_description: "Opis projektu",
+                    project_timeline: "Harmonogram projektu",
+                    urgency_level: "Poziom pilności",
+                    company_name: "Nazwa firmy",
+                    company_description: "Opis firmy",
+                    company_age: "Wiek firmy",
+                    company_adjectives: "Przymiotniki opisujące firmę",
+                    company_mission: "Misja firmy",
+                    company_vision: "Wizja firmy",
+                    business_scope: "Zakres biznesu",
+                    offer_target: "Cel oferty",
+                    market_potential: "Potencjał rynku",
+                    key_trends: "Kluczowe trendy",
+                    market_threats: "Zagrożenia rynkowe",
+                    main_competitors: "Główni konkurenci",
+                    competitor_strengths_weaknesses: "Mocne i słabe strony konkurentów",
+                    competitor_websites: "Strony internetowe konkurentów",
+                    market_saturation: "Nasycenie rynku",
+                    competitive_advantage: "Przewaga konkurencyjna",
+                    brand_history: "Historia marki",
+                    current_market_position: "Obecna pozycja na rynku",
+                    brand_perception: "Percepcja marki",
+                    growth_ambitions: "Ambicje wzrostu",
+                    current_relationship: "Obecny związek",
+                    offer_characteristics: "Charakterystyka oferty",
+                    unique_differentiators: "Unikalne rozróżniki",
+                    pricing_position: "Pozycja cenowa",
+                    service_scope_differentiator: "Rozróżnik zakresu usług",
+                    promotion_strategy: "Strategia promocji",
+                    promotion_channels: "Kanały promocji",
+                    brand_ambitions: "Ambicje marki",
+                    demographics: "Demografia",
+                    psychographics: "Psychografia",
+                    audience_pain_points: "Punkty bólu grupy docelowej",
+                    audience_size: "Wielkość grupy docelowej",
+                    existing_relationship: "Obecny związek z grupą docelową",
+                    positioning_statement: "Stwierdzenie pozycjonowania",
+                    key_consumer_proposition: "Kluczowa propozycja dla konsumenta",
+                    emotional_benefits: "Korzyści emocjonalne",
+                    rational_benefits: "Korzyści racjonalne",
+                    proposition_support: "Wsparcie propozycji",
+                    brand_values: "Wartości marki",
+                    brand_personality: "Osobowość marki",
+                    communication_style: "Styl komunikacji",
+                    key_messages: "Kluczowe wiadomości",
+                    reference_links: "Linki referencyjne",
+                    reference_notes: "Notatki referencyjne",
+                    project_character: "Charakter projektu",
+                    important_design_elements: "Ważne elementy projektowe",
+                    minimalist: "Minimalistyczny",
+                    casual: "Zwyczajny",
+                    vibrant: "Żywy",
+                    innovative: "Innowacyjny",
+                    dynamic: "Dynamiczny",
+                    aggressive: "Agresywny",
+                    powerful: "Potężny",
+                    rich: "Bogaty",
+                    restrained: "Powściągliwy",
+                    calm: "Spokojny",
+                    traditional: "Tradycyjny",
+                    majestic: "Majestatyczny",
+                    responsible: "Odpowiedzialny",
+                    delicate: "Delikatny",
+                    old_website_url: "URL starej strony internetowej",
+                    old_website_pros: "Zalety starej strony",
+                    old_website_cons: "Wady starej strony",
+                    old_website_issues: "Problemy starej strony",
+                    old_website_age: "Wiek starej strony",
+                    website_traffic: "Ruch na stronie",
+                    language_requirements: "Wymagania językowe",
+                    website_goals: "Cele strony internetowej",
+                    primary_purpose: "Główny cel",
+                    content_responsibility: "Odpowiedzialność za zawartość",
+                    has_content_resources: "Czy są zasoby treściowe?",
+                    has_photos_videos: "Czy są zdjęcia/wideo?",
+                    has_brand_assets: "Czy są zasoby brandu?",
+                    total_budget: "Całkowity budżet",
+                    design_budget: "Budżet na projektowanie",
+                    marketing_budget: "Budżet na marketing",
+                    budget_flexibility: "Elastyczność budżetu",
+                    deadline: "Termin",
+                    milestones: "Kamienie milowe",
+                    file_links: "Linki do plików",
+                    additional_notes: "Dodatkowe notatki",
+                    how_did_you_find_us: "Jak nas znaleźliście?"
+                },
+                selectOptions: {
+                    rebranding: "Rebrandowanie",
+                    website: "Strona internetowa",
+                    marketing: "Marketing",
+                    asap: "ASAP",
+                    "1m": "1 miesiąc",
+                    "2-3m": "2-3 miesiące",
+                    "3-6m": "3-6 miesięcy",
+                    flexible: "Elastycznie",
+                    standard: "Standardowa",
+                    high: "Wysoka",
+                    critical: "Krytyczna",
+                    low: "Niskie",
+                    medium: "Średnie",
+                    high: "Wysokie",
+                    veryhigh: "Bardzo wysokie",
+                    economic: "Ekonomiczna",
+                    mid: "Średnia",
+                    premium: "Premium",
+                    luxury: "Luksus",
+                    social: "Media społecznościowe",
+                    google: "Google",
+                    print: "Druk",
+                    outdoor: "Outdoor",
+                    email: "Email",
+                    events: "Eventy",
+                    influencers: "Influencerzy",
+                    content: "Content marketing",
+                    other: "Inne",
+                    polish: "Polski",
+                    english: "Angielski",
+                    german: "Niemiecki",
+                    french: "Francuski",
+                    leads: "Leadsy",
+                    awareness: "Świadomość",
+                    ecommerce: "E-commerce",
+                    portfolio: "Portfolio",
+                    info: "Informacje",
+                    yes: "Tak",
+                    no: "Nie",
+                    partial: "Częściowo",
+                    complete: "Kompletne",
+                    create: "Do stworzenia",
+                    rigid: "Sztywnie",
+                    full: "W pełni elastycznie",
+                    referral: "Rekomendacja",
+                    event: "Event"
+                }
+            },
+            en: {
+                panelTitle: "Admin Panel",
+                formularz: "Form",
+                briefList: "Brief List",
+                back: "← Back to list",
+                projectName: "Project Name",
+                company: "Company",
+                briefType: "Brief Type",
+                urgency: "Urgency",
+                submittedDate: "Submitted Date",
+                viewButton: "View",
+                deleteButton: "Delete",
+                deleteBriefTitle: "Delete brief?",
+                deleteBriefText: "This action cannot be undone. The brief will be permanently deleted.",
+                cancelButton: "Cancel",
+                confirmButton: "Delete",
+                noData: "—",
+                briefSections: {
+                    0: "Brief Type & Project Overview",
+                    1: "Company Presentation",
+                    2: "Market & Competition",
+                    3: "Brand Situation",
+                    4: "Product & Offer",
+                    5: "Target Audience",
+                    6: "Brand Promise & Positioning",
+                    7: "Design Guidelines",
+                    8: "Website",
+                    9: "Budget, Timeline & Notes"
+                },
+                fieldLabels: {
+                    brief_type: "Brief Type",
+                    project_name: "Project Name",
+                    project_description: "Project Description",
+                    project_timeline: "Project Timeline",
+                    urgency_level: "Urgency Level",
+                    company_name: "Company Name",
+                    company_description: "Company Description",
+                    company_age: "Company Age",
+                    company_adjectives: "Company Adjectives",
+                    company_mission: "Company Mission",
+                    company_vision: "Company Vision",
+                    business_scope: "Business Scope",
+                    offer_target: "Offer Target",
+                    market_potential: "Market Potential",
+                    key_trends: "Key Trends",
+                    market_threats: "Market Threats",
+                    main_competitors: "Main Competitors",
+                    competitor_strengths_weaknesses: "Competitor Strengths & Weaknesses",
+                    competitor_websites: "Competitor Websites",
+                    market_saturation: "Market Saturation",
+                    competitive_advantage: "Competitive Advantage",
+                    brand_history: "Brand History",
+                    current_market_position: "Current Market Position",
+                    brand_perception: "Brand Perception",
+                    growth_ambitions: "Growth Ambitions",
+                    current_relationship: "Current Relationship",
+                    offer_characteristics: "Offer Characteristics",
+                    unique_differentiators: "Unique Differentiators",
+                    pricing_position: "Pricing Position",
+                    service_scope_differentiator: "Service Scope Differentiator",
+                    promotion_strategy: "Promotion Strategy",
+                    promotion_channels: "Promotion Channels",
+                    brand_ambitions: "Brand Ambitions",
+                    demographics: "Demographics",
+                    psychographics: "Psychographics",
+                    audience_pain_points: "Audience Pain Points",
+                    audience_size: "Audience Size",
+                    existing_relationship: "Existing Relationship",
+                    positioning_statement: "Positioning Statement",
+                    key_consumer_proposition: "Key Consumer Proposition",
+                    emotional_benefits: "Emotional Benefits",
+                    rational_benefits: "Rational Benefits",
+                    proposition_support: "Proposition Support",
+                    brand_values: "Brand Values",
+                    brand_personality: "Brand Personality",
+                    communication_style: "Communication Style",
+                    key_messages: "Key Messages",
+                    reference_links: "Reference Links",
+                    reference_notes: "Reference Notes",
+                    project_character: "Project Character",
+                    important_design_elements: "Important Design Elements",
+                    minimalist: "Minimalist",
+                    casual: "Casual",
+                    vibrant: "Vibrant",
+                    innovative: "Innovative",
+                    dynamic: "Dynamic",
+                    aggressive: "Aggressive",
+                    powerful: "Powerful",
+                    rich: "Rich",
+                    restrained: "Restrained",
+                    calm: "Calm",
+                    traditional: "Traditional",
+                    majestic: "Majestic",
+                    responsible: "Responsible",
+                    delicate: "Delicate",
+                    old_website_url: "Old Website URL",
+                    old_website_pros: "Old Website Pros",
+                    old_website_cons: "Old Website Cons",
+                    old_website_issues: "Old Website Issues",
+                    old_website_age: "Old Website Age",
+                    website_traffic: "Website Traffic",
+                    language_requirements: "Language Requirements",
+                    website_goals: "Website Goals",
+                    primary_purpose: "Primary Purpose",
+                    content_responsibility: "Content Responsibility",
+                    has_content_resources: "Content Resources?",
+                    has_photos_videos: "Photos/Videos?",
+                    has_brand_assets: "Brand Assets?",
+                    total_budget: "Total Budget",
+                    design_budget: "Design Budget",
+                    marketing_budget: "Marketing Budget",
+                    budget_flexibility: "Budget Flexibility",
+                    deadline: "Deadline",
+                    milestones: "Milestones",
+                    file_links: "File Links",
+                    additional_notes: "Additional Notes",
+                    how_did_you_find_us: "How did you find us?"
+                },
+                selectOptions: {
+                    rebranding: "Rebranding",
+                    website: "Website",
+                    marketing: "Marketing",
+                    asap: "ASAP",
+                    "1m": "1 month",
+                    "2-3m": "2-3 months",
+                    "3-6m": "3-6 months",
+                    flexible: "Flexible",
+                    standard: "Standard",
+                    high: "High",
+                    critical: "Critical",
+                    low: "Low",
+                    medium: "Medium",
+                    high: "High",
+                    veryhigh: "Very High",
+                    economic: "Economic",
+                    mid: "Mid-range",
+                    premium: "Premium",
+                    luxury: "Luxury",
+                    social: "Social Media",
+                    google: "Google",
+                    print: "Print",
+                    outdoor: "Outdoor",
+                    email: "Email",
+                    events: "Events",
+                    influencers: "Influencers",
+                    content: "Content Marketing",
+                    other: "Other",
+                    polish: "Polish",
+                    english: "English",
+                    german: "German",
+                    french: "French",
+                    leads: "Leads",
+                    awareness: "Awareness",
+                    ecommerce: "E-commerce",
+                    portfolio: "Portfolio",
+                    info: "Information",
+                    yes: "Yes",
+                    no: "No",
+                    partial: "Partial",
+                    complete: "Complete",
+                    create: "Create",
+                    rigid: "Rigid",
+                    full: "Fully flexible",
+                    referral: "Referral",
+                    event: "Event"
+                }
+            }
+        };
+
+        // Demo briefs data
+        const demoBriefs = [
+            {
+                id: "demo-1",
+                brief_type: "rebranding",
+                urgency_level: "high",
+                submitted_date: "2026-01-15",
+                project_name: "Rebrand Zdrofit 2026",
+                company_name: "Zdrofit",
+                project_description: "Kompleksowe rebrandowanie klubu fitness Zdrofit w związku z ekspansją na nowe rynki.",
+                project_timeline: "2-3m",
+                company_description: "Sieć nowoczesnych klubów fitness o najwyższych standardach sprzętu i usług.",
+                company_age: "12 lat",
+                company_adjectives: "profesjonalny, nowoczesny, dynamiczny, bliski klientom",
+                company_mission: "Promować zdrowy styl życia i dobrą formę fizyczną.",
+                company_vision: "Być wiodącą siecią fitness w Europie Środkowo-Wschodniej.",
+                business_scope: "Usługi fitness, trening personalny, klasy grupowe, wellness.",
+                offer_target: "Osoby zainteresowane zdrowiem i formą fizyczną.",
+                market_potential: "Rynek fitness rośnie 8% rocznie.",
+                key_trends: "Home fitness, personalizacja, wellnes, tech integration",
+                market_threats: "Konkurencja z home fitness, tańsze alternatywy",
+                main_competitors: "Fitness Evolution, FitTime, Centaur",
+                competitor_strengths_weaknesses: "Wszyscy mają nowoczesne aplikacje, ale słabe community.",
+                competitor_websites: "fitness-evolution.pl, fittime.pl, centaur.fit",
+                market_saturation: "high",
+                competitive_advantage: "Najlepszy personel, najnowszy sprzęt, najlepsza lokalizacja",
+                brand_history: "Założony w 2014 roku, szybki wzrost, teraz 8 lokalizacji.",
+                current_market_position: "Lider lokalny, znany z jakości.",
+                brand_perception: "Nowoczesny, profesjonalny, drogi",
+                growth_ambitions: "Rozszerzenie na 15 miast w 3 lata",
+                current_relationship: "Spora baza lojalnych klientów",
+                offer_characteristics: "Wysokiej jakości usługi fitness, indywidualizacja",
+                unique_differentiators: "Najlepsi trenerzy, najnowy sprzęt, personalizacja",
+                pricing_position: "premium",
+                service_scope_differentiator: "Kompleksowy pakiet wellness i fitness",
+                promotion_strategy: "Social media, influencers, referrals",
+                promotion_channels: ["social", "google", "events", "influencers", "content"],
+                brand_ambitions: "Być postrzegany jako lider w branży fitness",
+                demographics: "25-45 lat, wyższe wykształcenie, dochód wyższy",
+                psychographics: "Zainteresowani zdrowiem, aktywni, ambitni",
+                audience_pain_points: "Brak czasu, zbyt droga konkurencja, brak personalizacji",
+                audience_size: "~50,000 ludzi w Warszawie",
+                existing_relationship: "Część już trenuje, inne znają z polecenia",
+                positioning_statement: "Zdrofit to premium fitness dla ambitnych profesjonalistów",
+                key_consumer_proposition: "Najlepszy fitness, najlepsi trenerzy, najnowszy sprzęt",
+                emotional_benefits: "Pewność siebie, wspólnota, motywacja",
+                rational_benefits: "Efekty, dostępność, profesjonalizm",
+                proposition_support: "Certifikacje trenerów, nowoczesny sprzęt, wyniki klientów",
+                brand_values: "Jakość, profesjonalizm, innowacja, zaangażowanie",
+                brand_personality: "Dynamiczny, inspirujący, profesjonalny",
+                communication_style: "Motywujący, wspierający, profesjonalny",
+                key_messages: "Twoja droga do idealnego ciała",
+                reference_links: "nike.com, lululemon.com, peloton.com",
+                reference_notes: "Inspiracja z premium fitness brandów",
+                project_character: "Nowoczesny, dynamiczny, premium",
+                important_design_elements: "Dynamika, energię, professionalność",
+                minimalist: 7,
+                casual: 3,
+                vibrant: 8,
+                innovative: 7,
+                dynamic: 9,
+                aggressive: 5,
+                powerful: 6,
+                rich: 5,
+                restrained: 4,
+                calm: 2,
+                traditional: 2,
+                majestic: 4,
+                responsible: 7,
+                delicate: 2,
+                old_website_url: "zdrofit.pl",
+                old_website_pros: "Dobra nawigacja, responsywny design",
+                old_website_cons: "Przestarzały wygląd, mało interaktywny",
+                old_website_issues: "Nie odzwierciedla premium positioning",
+                old_website_age: "4 lata",
+                website_traffic: "~5,000 monthly visitors",
+                language_requirements: ["polish", "english"],
+                website_goals: "Zwiększyć konwersje, pokazać ofertę, community",
+                primary_purpose: ["leads", "awareness"],
+                content_responsibility: "Zespół marketingowy Zdrofit",
+                has_content_resources: "partial",
+                has_photos_videos: "partial",
+                has_brand_assets: "partial",
+                total_budget: "150000",
+                design_budget: "50000",
+                marketing_budget: "100000",
+                budget_flexibility: "partial",
+                deadline: "2026-06-30",
+                milestones: "Koncepcja - marzec, Realizacja - maj, Wdrożenie - czerwiec",
+                file_links: "drive.google.com/zdrofit-assets",
+                additional_notes: "Bardzo ważny projekt dla naszego wzrostu",
+                how_did_you_find_us: "referral"
+            },
+            {
+                id: "demo-2",
+                brief_type: "website",
+                urgency_level: "standard",
+                submitted_date: "2026-01-20",
+                project_name: "E-commerce FitShop",
+                company_name: "FitShop",
+                project_description: "Nowa strona e-commerce dla sklepu fitness",
+                project_timeline: "3-6m",
+                company_description: "Sklep z profesjonalnym sprzętem fitness",
+                company_age: "3 lata",
+                company_adjectives: "wiarygodny, profesjonalny",
+                market_saturation: "medium",
+                pricing_position: "mid",
+                promotion_channels: ["social", "google"],
+                language_requirements: ["polish", "english"],
+                primary_purpose: ["ecommerce", "leads"],
+                has_content_resources: "yes",
+                has_photos_videos: "yes",
+                has_brand_assets: "partial",
+                total_budget: "80000",
+                design_budget: "30000",
+                marketing_budget: "50000",
+                budget_flexibility: "partial",
+                deadline: "2026-09-01",
+                how_did_you_find_us: "google"
+            },
+            {
+                id: "demo-3",
+                brief_type: "marketing",
+                urgency_level: "critical",
+                submitted_date: "2026-01-25",
+                project_name: "Kampania Let's Move",
+                company_name: "Hanoi Agency",
+                project_description: "Kampania marketing dla projektu wellness",
+                project_timeline: "asap",
+                company_age: "5 lat",
+                promotion_channels: ["social", "outdoor", "events"],
+                total_budget: "45000",
+                design_budget: "15000",
+                marketing_budget: "30000",
+                budget_flexibility: "rigid",
+                deadline: "2026-03-15",
+                how_did_you_find_us: "referral"
+            }
+        ];
+
+        // Main App Component
+        function AdminPanel() {
+            const [language, setLanguage] = useState("pl");
+            const [view, setView] = useState("list"); // "list" or "detail"
+            const [briefs, setBriefs] = useState([]);
+            const [selectedBrief, setSelectedBrief] = useState(null);
+            const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+            const t = translations[language];
+
+            useEffect(() => {
+                const stored = localStorage.getItem("hanoi_briefs");
+                if (stored) {
+                    try {
+                        setBriefs(JSON.parse(stored));
+                    } catch (e) {
+                        setBriefs(demoBriefs);
+                    }
+                } else {
+                    setBriefs(demoBriefs);
+                    localStorage.setItem("hanoi_briefs", JSON.stringify(demoBriefs));
+                }
+            }, []);
+
+            const handleDeleteBrief = (briefId) => {
+                const updated = briefs.filter(b => b.id !== briefId);
+                setBriefs(updated);
+                localStorage.setItem("hanoi_briefs", JSON.stringify(updated));
+                setDeleteConfirm(null);
+                setView("list");
+            };
+
+            const handleViewBrief = (brief) => {
+                setSelectedBrief(brief);
+                setView("detail");
+            };
+
+            return (
+                <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
+                    <Header language={language} setLanguage={setLanguage} t={t} />
+                    {view === "list" ? (
+                        <BriefList briefs={briefs} onViewBrief={handleViewBrief} t={t} language={language} />
+                    ) : (
+                        <BriefDetail
+                            brief={selectedBrief}
+                            onBack={() => setView("list")}
+                            onDelete={(id) => setDeleteConfirm(id)}
+                            t={t}
+                            language={language}
+                        />
+                    )}
+                    {deleteConfirm && (
+                        <DeleteConfirmModal
+                            briefId={deleteConfirm}
+                            onConfirm={() => handleDeleteBrief(deleteConfirm)}
+                            onCancel={() => setDeleteConfirm(null)}
+                            t={t}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function Header({ language, setLanguage, t }) {
+            return (
+                <div className="header">
+                    <div className="header-left">
+                        <svg className="hanoi-logo-svg" viewBox="0 0 280 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <text x="0" y="46" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="48" fontWeight="800" fill="#1a1a2e" letterSpacing="4">H</text>
+                            <text x="52" y="46" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="48" fontWeight="800" fill="#1a1a2e" letterSpacing="4">A</text>
+                            <polygon points="73,44 83,18 93,44" fill="#E85D2C" opacity="0.9" />
+                            <text x="104" y="46" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="48" fontWeight="800" fill="#1a1a2e" letterSpacing="4">N</text>
+                            <text x="160" y="46" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="48" fontWeight="800" fill="#1a1a2e" letterSpacing="4">O</text>
+                            <text x="218" y="46" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="48" fontWeight="800" fill="#1a1a2e" letterSpacing="4">I</text>
+                        </svg>
+                        <div className="header-title">{t.panelTitle}</div>
+                    </div>
+                    <div className="header-right">
+                        <a href="/" className="nav-link">{t.formularz}</a>
+                        <div className="lang-toggle">
+                            <button
+                                className={`lang-btn ${language === "pl" ? "active" : ""}`}
+                                onClick={() => setLanguage("pl")}
+                            >
+                                PL
+                            </button>
+                            <button
+                                className={`lang-btn ${language === "en" ? "active" : ""}`}
+                                onClick={() => setLanguage("en")}
+                            >
+                                EN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function BriefList({ briefs, onViewBrief, t, language }) {
+            const getUrgencyBadgeClass = (urgency) => {
+                if (urgency === "critical") return "badge-urgency-critical";
+                if (urgency === "high") return "badge-urgency-high";
+                return "badge-urgency-standard";
+            };
+
+            const getTypeLabel = (type) => {
+                return t.selectOptions[type] || type;
+            };
+
+            const getUrgencyLabel = (urgency) => {
+                return t.selectOptions[urgency] || urgency;
+            };
+
+            const formatDate = (dateStr) => {
+                if (!dateStr) return "—";
+                const date = new Date(dateStr + "T00:00:00");
+                return date.toLocaleDateString(language === "pl" ? "pl-PL" : "en-US");
+            };
+
+            return (
+                <div className="content">
+                    <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#333", marginBottom: "24px" }}>
+                        {t.briefList}
+                    </h2>
+                    {briefs.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-state-icon">📋</div>
+                            <div className="empty-state-title">{language === "pl" ? "Brak briefów" : "No briefs"}</div>
+                            <div className="empty-state-text">{language === "pl" ? "Nie ma jeszcze żadnych briefów w systemie." : "No briefs in the system yet."}</div>
+                        </div>
+                    ) : (
+                        <div>
+                            {briefs.map(brief => (
+                                <div key={brief.id} className="card-list">
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: "16px", fontWeight: "600", color: "#333", marginBottom: "4px" }}>
+                                                {brief.project_name || "—"}
+                                            </div>
+                                            <div style={{ fontSize: "13px", color: "#666" }}>
+                                                {brief.company_name || "—"}
+                                            </div>
+                                        </div>
+                                        <button className="button-primary" onClick={() => onViewBrief(brief)} style={{ marginLeft: "12px" }}>
+                                            {t.viewButton}
+                                        </button>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
+                                        <div className="badge-primary">
+                                            {getTypeLabel(brief.brief_type)}
+                                        </div>
+                                        <div className={getUrgencyBadgeClass(brief.urgency_level)}>
+                                            {getUrgencyLabel(brief.urgency_level)}
+                                        </div>
+                                        <div className="badge-secondary">
+                                            {formatDate(brief.submitted_date)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function BriefDetail({ brief, onBack, onDelete, t, language }) {
+            const getUrgencyBadgeClass = (urgency) => {
+                if (urgency === "critical") return "badge-urgency-critical";
+                if (urgency === "high") return "badge-urgency-high";
+                return "badge-urgency-standard";
+            };
+
+            const getTypeLabel = (type) => {
+                return t.selectOptions[type] || type;
+            };
+
+            const getUrgencyLabel = (urgency) => {
+                return t.selectOptions[urgency] || urgency;
+            };
+
+            const formatDate = (dateStr) => {
+                if (!dateStr) return "—";
+                const date = new Date(dateStr + "T00:00:00");
+                return date.toLocaleDateString(language === "pl" ? "pl-PL" : "en-US");
+            };
+
+            const renderFieldValue = (value) => {
+                if (value === null || value === undefined || value === "") {
+                    return <span className="field-value empty">{t.noData}</span>;
+                }
+                if (Array.isArray(value)) {
+                    return (
+                        <div>
+                            {value.map((item, idx) => (
+                                <span key={idx} className="tag-pill">
+                                    {t.selectOptions[item] || item}
+                                </span>
+                            ))}
+                        </div>
+                    );
+                }
+                if (typeof value === "number") {
+                    return <span className="field-value">{value}</span>;
+                }
+                return <span className="field-value">{String(value)}</span>;
+            };
+
+            const renderSliderValue = (value) => {
+                if (value === null || value === undefined) return null;
+                const num = parseInt(value, 10);
+                const filled = Array(num).fill(0);
+                const empty = Array(10 - num).fill(0);
+                return (
+                    <div className="slider-bar">
+                        {filled.map((_, i) => <div key={`filled-${i}`} className="slider-block filled"></div>)}
+                        {empty.map((_, i) => <div key={`empty-${i}`} className="slider-block"></div>)}
+                        <span style={{ marginLeft: "8px", fontSize: "12px", fontWeight: "600", color: "#333" }}>
+                            {num}/10
+                        </span>
+                    </div>
+                );
+            };
+
+            const renderSection = (sectionNum, fields) => {
+                const allEmpty = fields.every(fieldName => !brief[fieldName]);
+                if (allEmpty) {
+                    return null;
+                }
+
+                return (
+                    <div key={sectionNum}>
+                        <div className="section-header">
+                            <div className="section-number">{sectionNum}</div>
+                            <div className="section-title">{t.briefSections[sectionNum]}</div>
+                        </div>
+                        <div className="grid-2">
+                            {fields.map(fieldName => (
+                                <div key={fieldName} className="field-group">
+                                    <label className="field-label">{t.fieldLabels[fieldName] || fieldName}</label>
+                                    {renderFieldValue(brief[fieldName])}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderSectionWithSliders = (sectionNum, textFields, sliderFields) => {
+                const allEmpty = [...textFields, ...sliderFields].every(fieldName => !brief[fieldName]);
+                if (allEmpty) {
+                    return null;
+                }
+
+                return (
+                    <div key={sectionNum}>
+                        <div className="section-header">
+                            <div className="section-number">{sectionNum}</div>
+                            <div className="section-title">{t.briefSections[sectionNum]}</div>
+                        </div>
+                        {textFields.length > 0 && (
+                            <div className="grid-2" style={{ marginBottom: "24px" }}>
+                                {textFields.map(fieldName => (
+                                    <div key={fieldName} className="field-group">
+                                        <label className="field-label">{t.fieldLabels[fieldName] || fieldName}</label>
+                                        {renderFieldValue(brief[fieldName])}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {sliderFields.length > 0 && (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px" }}>
+                                {sliderFields.map(fieldName => (
+                                    brief[fieldName] !== null && brief[fieldName] !== undefined && (
+                                        <div key={fieldName}>
+                                            <label className="field-label">{t.fieldLabels[fieldName] || fieldName}</label>
+                                            {renderSliderValue(brief[fieldName])}
+                                        </div>
+                                    )
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="content">
+                    <button className="back-button" onClick={onBack}>
+                        {t.back}
+                    </button>
+
+                    <div className="card">
+                        <div className="brief-header-row">
+                            <div className="brief-header-info">
+                                <div className="brief-project-name">{brief.project_name || "—"}</div>
+                                <div className="brief-company">{brief.company_name || "—"}</div>
+                                <div className="brief-badges">
+                                    <div className="badge-primary">{getTypeLabel(brief.brief_type)}</div>
+                                    <div className={getUrgencyBadgeClass(brief.urgency_level)}>
+                                        {getUrgencyLabel(brief.urgency_level)}
+                                    </div>
+                                    <div className="badge-secondary">{formatDate(brief.submitted_date)}</div>
+                                </div>
+                            </div>
+                            <div className="brief-header-actions">
+                                <button
+                                    className="button-danger"
+                                    onClick={() => onDelete(brief.id)}
+                                >
+                                    {t.deleteButton}
+                                </button>
+                            </div>
+                        </div>
+
+                        {renderSection(0, [
+                            "brief_type", "project_name", "project_description",
+                            "project_timeline", "urgency_level"
+                        ])}
+
+                        {renderSection(1, [
+                            "company_name", "company_description", "company_age",
+                            "company_adjectives", "company_mission", "company_vision",
+                            "business_scope", "offer_target"
+                        ])}
+
+                        {renderSection(2, [
+                            "market_potential", "key_trends", "market_threats",
+                            "main_competitors", "competitor_strengths_weaknesses",
+                            "competitor_websites", "market_saturation", "competitive_advantage"
+                        ])}
+
+                        {renderSection(3, [
+                            "brand_history", "current_market_position", "brand_perception",
+                            "growth_ambitions", "current_relationship"
+                        ])}
+
+                        {renderSection(4, [
+                            "offer_characteristics", "unique_differentiators",
+                            "pricing_position", "service_scope_differentiator",
+                            "promotion_strategy", "promotion_channels", "brand_ambitions"
+                        ])}
+
+                        {renderSection(5, [
+                            "demographics", "psychographics", "audience_pain_points",
+                            "audience_size", "existing_relationship"
+                        ])}
+
+                        {renderSection(6, [
+                            "positioning_statement", "key_consumer_proposition",
+                            "emotional_benefits", "rational_benefits",
+                            "proposition_support", "brand_values", "brand_personality",
+                            "communication_style", "key_messages"
+                        ])}
+
+                        {renderSectionWithSliders(7,
+                            ["reference_links", "reference_notes", "project_character", "important_design_elements"],
+                            ["minimalist", "casual", "vibrant", "innovative", "dynamic", "aggressive", "powerful", "rich", "restrained", "calm", "traditional", "majestic", "responsible", "delicate"]
+                        )}
+
+                        {renderSection(8, [
+                            "old_website_url", "old_website_pros", "old_website_cons",
+                            "old_website_issues", "old_website_age", "website_traffic",
+                            "language_requirements", "website_goals", "primary_purpose",
+                            "content_responsibility", "has_content_resources",
+                            "has_photos_videos", "has_brand_assets"
+                        ])}
+
+                        {renderSection(9, [
+                            "total_budget", "design_budget", "marketing_budget",
+                            "budget_flexibility", "deadline", "milestones",
+                            "file_links", "additional_notes", "how_did_you_find_us"
+                        ])}
+                    </div>
+                </div>
+            );
+        }
+
+        function DeleteConfirmModal({ briefId, onConfirm, onCancel, t }) {
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-title">{t.deleteBriefTitle}</div>
+                        <div className="modal-text">{t.deleteBriefText}</div>
+                        <div className="modal-buttons">
+                            <button className="button-secondary" onClick={onCancel}>
+                                {t.cancelButton}
+                            </button>
+                            <button className="button-danger" onClick={onConfirm}>
+                                {t.confirmButton}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render app
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<AdminPanel />);
+    </script>
+</body>
+</html>
