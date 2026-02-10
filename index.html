@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hanoi - Brief Projektowy</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            --accent: #E85D2C;
+            --accent-light: rgba(232, 93, 44, 0.08);
+            --accent-lighter: rgba(232, 93, 44, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(232, 93, 44, 0.02) 100%);
+        }
+
+        .hanoi-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #E85D2C 0%, #d64a1f 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+            box-shadow: 0 2px 8px rgba(232, 93, 44, 0.2);
+        }
+
+        .hanoi-logo.sm {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        input[type="date"],
+        input[type="number"],
+        textarea,
+        select {
+            @apply rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-0 px-4 py-3 text-base transition-all;
+            border-color: #e5e7eb;
+            focus-ring-color: #E85D2C;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="url"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #E85D2C;
+            box-shadow: 0 0 0 3px rgba(232, 93, 44, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 100%);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #E85D2C;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(232, 93, 44, 0.3);
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(232, 93, 44, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #E85D2C;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(232, 93, 44, 0.3);
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(232, 93, 44, 0.4);
+        }
+
+        .radio-card,
+        .checkbox-card {
+            @apply p-3 rounded-xl border-2 cursor-pointer transition-all;
+            border-color: #e5e7eb;
+        }
+
+        .radio-card:hover,
+        .checkbox-card:hover {
+            border-color: #E85D2C;
+        }
+
+        .radio-card.selected {
+            border-color: #E85D2C;
+            background: rgba(232, 93, 44, 0.08);
+        }
+
+        .checkbox-card.selected {
+            border-color: #E85D2C;
+            background: rgba(232, 93, 44, 0.08);
+        }
+
+        .section-header {
+            @apply pt-6 pb-2 border-b border-gray-200 text-lg font-bold;
+            color: #E85D2C;
+        }
+
+        .section-subtext {
+            @apply text-sm text-gray-500;
+        }
+
+        .nav-dot {
+            @apply rounded-full cursor-pointer transition-all;
+            width: 8px;
+            height: 8px;
+            background-color: #e5e7eb;
+        }
+
+        .nav-dot.past {
+            background-color: #E85D2C;
+        }
+
+        .nav-dot.current {
+            width: 24px;
+            background-color: #E85D2C;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background-color: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #E85D2C;
+            transition: width 0.3s ease;
+        }
+
+        .frosted-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .spin {
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        button {
+            transition: all 0.2s ease;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const translations = {
+            pl: {
+                // Global
+                languageToggle: 'PL | EN',
+                saving: 'Zapisywanie...',
+                saved: 'Zapisano',
+
+                // Welcome Screen
+                welcomeHeading: 'Zaczynamy',
+                briefTitle: 'Brief projektowy',
+                estimatedTime: 'Szacowany czas: 15-25 minut',
+                autoSave: 'Twój postęp jest zapisywany automatycznie',
+                stepsInfo: '10 kroków · Pola opcjonalne możesz pominąć',
+                startButton: 'Rozpocznij →',
+
+                // Steps
+                stepOf: 'Krok',
+
+                step0Title: 'Typ briefu i przegląd projektu',
+                step0Desc: 'Zacznij od podstawowych informacji o projekcie',
+                briefType: 'Typ briefu',
+                briefTypeOpt1: 'Strategia i design',
+                briefTypeOpt2: 'Strona internetowa',
+                briefTypeOpt3: 'Nowy branding',
+                briefTypeOpt4: 'Pełny rebranding',
+                briefTypeOpt5: 'Materiały marketingowe',
+                briefTypeOpt6: 'Inne',
+                projectName: 'Nazwa projektu',
+                projectNamePlaceholder: 'np. Rebrand 2026, Nowa strona e-commerce',
+                projectDescription: 'Opis projektu',
+                projectDescriptionPlaceholder: 'Opisz projekt kilkoma zdaniami',
+                projectTimeline: 'Harmonogram projektu',
+                projectTimelineOpt1: 'ASAP (1-2 tyg.)',
+                projectTimelineOpt2: '1 miesiąc',
+                projectTimelineOpt3: '2-3 miesiące',
+                projectTimelineOpt4: '3-6 miesięcy',
+                projectTimelineOpt5: 'Elastycznie',
+                urgencyLevel: 'Poziom pilności',
+                urgencyStandard: 'Standardowa',
+                urgencyHigh: 'Wysoka',
+                urgencyCritical: 'Krytyczna',
+
+                step1Title: 'Prezentacja firmy',
+                step1Desc: 'Opowiedz nam o swojej firmie',
+                companyName: 'Nazwa firmy',
+                companyNamePlaceholder: 'np. Tech Solutions Sp. z o.o.',
+                companyDescription: 'Opis firmy',
+                companyDescriptionPlaceholder: 'Opisz co oferuje firma',
+                companyAge: 'Od kiedy istnieje?',
+                companyAgePlaceholder: 'np. Od 2015 roku',
+                companyAdjectives: 'Przymiotniki firmy',
+                companyAdjectivesPlaceholder: 'Podaj 5-10 przymiotników opisujących firmę',
+                companyMission: 'Misja firmy',
+                companyMissionPlaceholder: 'Jaki jest cel firmy?',
+                companyVision: 'Wizja firmy',
+                companyVisionPlaceholder: 'Długoterminowe ambicje?',
+                businessScope: 'Zakres biznesu',
+                businessScopePlaceholder: 'Zakres geograficzny i branża',
+                offerTarget: 'Do kogo skierowana jest oferta?',
+                offerTargetPlaceholder: 'Opisz docelowych klientów',
+
+                step2Title: 'Rynek i konkurencja',
+                step2Desc: 'Analiza otoczenia rynkowego',
+                marketPotential: 'Potencjał wzrostu rynku',
+                marketPotentialPlaceholder: 'Opisz potencjał wzrostu',
+                keyTrends: 'Główne trendy',
+                keyTrendsPlaceholder: 'Jakie są główne trendy w branży?',
+                marketThreats: 'Zagrożenia',
+                marketThreatsPlaceholder: 'Jakie są zagrożenia rynkowe?',
+                mainCompetitors: 'Główni konkurenci',
+                mainCompetitorsPlaceholder: 'Wymień głównych graczy i ich udziały rynkowe',
+                competitorStrengthsWeaknesses: 'Siły i słabości konkurentów',
+                competitorStrengthsWeaknessesPlaceholder: 'Porównaj konkurentów',
+                competitorWebsites: 'Strony konkurentów',
+                competitorWebsitesPlaceholder: 'URL konkurentów (jeden na linię)',
+                marketSaturation: 'Nasycenie rynku',
+                marketSaturationLow: 'Niskie',
+                marketSaturationMedium: 'Średnie',
+                marketSaturationHigh: 'Wysokie',
+                marketSaturationVeryHigh: 'Bardzo wysokie',
+                competitiveAdvantage: 'Twoja przewaga konkurencyjna',
+                competitiveAdvantagePlaceholder: 'Czym się wyróżniasz?',
+
+                step3Title: 'Sytuacja marki',
+                step3Desc: 'Historia i obecna pozycja marki',
+                brandHistory: 'Historia marki',
+                brandHistoryPlaceholder: 'Jak ewoluowała Twoja marka?',
+                currentMarketPosition: 'Obecna pozycja rynkowa',
+                currentMarketPositionPlaceholder: 'Jak postrzegana jest marka aktualnie?',
+                brandPerception: 'Postrzeganie marki',
+                brandPerceptionPlaceholder: 'Jak klienci ją widzą?',
+                growthAmbitions: 'Ambicje wzrostu',
+                growthAmbitionsPlaceholder: 'Jaki jest Twój cel?',
+                currentRelationship: 'Obecna relacja z marką (opcjonalne)',
+                currentRelationshipPlaceholder: 'Jeśli pracowaliśmy już razem...',
+
+                step4Title: 'Produkt i oferta',
+                step4Desc: 'Szczegóły produktu i strategii promocji',
+                offerCharacteristics: 'Charakterystyka oferty',
+                offerCharacteristicsPlaceholder: 'Opisz produkt/usługę',
+                uniqueDifferentiators: 'Unikalne różnicniki',
+                uniqueDifferentiatorsPlaceholder: 'Co czyni to niepowtarzalnym?',
+                pricingPosition: 'Pozycja cenowa',
+                pricingEconomic: 'Ekonomiczny',
+                pricingMid: 'Średni segment',
+                pricingPremium: 'Premium',
+                pricingLuxury: 'Luksus',
+                serviceScopeDifferentiator: 'Zakres usług (opcjonalne)',
+                serviceScopeDifferentiatorPlaceholder: 'Dodatkowe usługi lub wsparcie?',
+                promotionStrategy: 'Strategia promocji',
+                promotionStrategyPlaceholder: 'Jak promować produkt?',
+                promotionChannels: 'Kanały promocji',
+                socialMedia: 'Social media',
+                googleAds: 'Google Ads',
+                print: 'Druk',
+                outdoor: 'Outdoor',
+                emailMarketing: 'Email marketing',
+                events: 'Eventy',
+                influencers: 'Influencerzy',
+                contentMarketing: 'Content marketing',
+                other: 'Inne',
+                brandAmbitions: 'Ambicje marki',
+                brandAmbitionsPlaceholder: 'Jaki jest Twój idealny wizerunek?',
+
+                step5Title: 'Grupa docelowa',
+                step5Desc: 'Kim są Twoi idealni klienci?',
+                demographics: 'Dane demograficzne',
+                demographicsPlaceholder: 'Wiek, płeć, dochód, lokalizacja',
+                psychographics: 'Dane psychograficzne',
+                psychographicsPlaceholder: 'Wartości, styl życia',
+                audiencePainPoints: 'Problemy grupy docelowej',
+                audiencePainPointsPlaceholder: 'Jakie problemy rozwiązujesz?',
+                audienceSize: 'Wielkość grupy docelowej (opcjonalne)',
+                audienceSizePlaceholder: 'np. 50 000 osób',
+                existingRelationship: 'Istniejąca relacja z grupą (opcjonalne)',
+                existingRelationshipPlaceholder: 'Czy już mają doświadczenie z Tobą?',
+
+                step6Title: 'Obietnica marki i pozycjonowanie',
+                step6Desc: 'Rdzenna wartość Twojej marki',
+                positioningStatement: 'Oświadczenie pozycjonowania',
+                positioningHelp: 'Szablon: Dla [grupa docelowa], [marka] jest [kategoria], która daje [korzyść], ponieważ [powód]',
+                keyConsumerProposition: 'Kluczowa propozycja wartości',
+                emotionalBenefits: 'Korzyści emocjonalne',
+                rationalBenefits: 'Korzyści racjonalne',
+                propositionSupport: 'Wsparcie dla propozycji',
+                brandValues: 'Wartości marki',
+                brandPersonality: 'Osobowość marki',
+                communicationStyle: 'Styl komunikacji',
+                keyMessages: 'Kluczowe wiadomości',
+
+                step7Title: 'Wytyczne designu',
+                step7Desc: 'Estetyka i charakter wizualny',
+                referenceLinks: 'Linki referencyjne',
+                referenceLinksPlaceholder: 'Strony/profile jako referencje (URL)',
+                referenceNotes: 'Notatki dotyczące referencji',
+                referenceNotesPlaceholder: 'Co Ci się podoba w referencjach?',
+                projectCharacter: 'Charakter projektu',
+                projectCharacterPlaceholder: 'Przymiotniki opisujące charakter',
+                importantDesignElements: 'Ważne elementy designu (opcjonalne)',
+                importantDesignElementsPlaceholder: 'Elementy, które muszą być na wstanie',
+                designCharacteristics: 'Cechy designu (skala 0-10)',
+                designCharacteristicsSubtext: 'Przesuń suwak aby określić natężenie cechy',
+                minimalist: 'Minimalistyczne',
+                casual: 'Swobodne',
+                vibrant: 'Żywe',
+                innovative: 'Nowatorskie',
+                dynamic: 'Dynamiczne',
+                aggressive: 'Drapieżne',
+                powerful: 'Potężne/Silne',
+                rich: 'Bogate',
+                restrained: 'Powściągliwe',
+                calm: 'Spokojne',
+                traditional: 'Tradycyjne',
+                majestic: 'Dostojne',
+                responsible: 'Odpowiedzialne',
+                delicate: 'Delikatne/Lekkie',
+
+                step8Title: 'Strona internetowa',
+                step8Desc: 'Wymagania i cele dla strony',
+                currentWebsite: 'Obecna strona (jeśli istnieje)',
+                oldWebsiteUrl: 'URL obecnej strony (opcjonalne)',
+                oldWebsiteUrlPlaceholder: 'https://...',
+                oldWebsitePros: 'Co działa dobrze? (opcjonalne)',
+                oldWebsiteProsPaceholder: 'Wymień pozytywne aspekty',
+                oldWebsiteCons: 'Co trzeba poprawiać? (opcjonalne)',
+                oldWebsiteConsPlaceholder: 'Wymień negatywne aspekty',
+                oldWebsiteIssues: 'Problemy techniczne (opcjonalne)',
+                oldWebsiteIssuesPlaceholder: 'Błędy, podatności, szybkość?',
+                oldWebsiteAge: 'Wiek strony (opcjonalne)',
+                oldWebsiteAgePlaceholder: 'np. 3 lata',
+                websiteTraffic: 'Ruch na stronie (opcjonalne)',
+                websiteTrafficPlaceholder: 'np. 5000 użytkowników/miesiąc',
+                newWebsite: 'Nowa strona',
+                languageRequirements: 'Wymagane języki',
+                polish: 'Polski',
+                english: 'English',
+                german: 'Deutsch',
+                french: 'Français',
+                another: 'Inny',
+                websiteGoals: 'Cele strony',
+                websiteGoalsPlaceholder: 'Co ma osiągnąć nowa strona?',
+                primaryPurpose: 'Główny cel',
+                leadGeneration: 'Generowanie leadów',
+                brandAwareness: 'Świadomość marki',
+                ecommerce: 'E-commerce',
+                portfolio: 'Portfolio',
+                informational: 'Informacyjna',
+                contentResponsibility: 'Odpowiedzialny za treści (opcjonalne)',
+                contentResponsibilityPlaceholder: 'Imię/rola osoby',
+                hasContentResources: 'Czy masz materiały do strony?',
+                yes: 'Tak',
+                no: 'Nie',
+                partially: 'Częściowo',
+                hasPhotosVideos: 'Fotografie i wideo?',
+                hasBrandAssets: 'Zasoby marki (logo, paleta, czcionki)?',
+                complete: 'Kompletne',
+                partial: 'Częściowe',
+                needToCreate: 'Trzeba stworzyć',
+
+                step9Title: 'Budżet, harmonogram i uwagi',
+                step9Desc: 'Ostateczne szczegóły projektu',
+                totalBudget: 'Łączny budżet',
+                totalBudgetPlaceholder: 'np. 50 000 zł',
+                designBudget: 'Budżet designu (opcjonalne)',
+                designBudgetPlaceholder: 'np. 30 000 zł',
+                marketingBudget: 'Budżet marketingu (opcjonalne)',
+                marketingBudgetPlaceholder: 'np. 20 000 zł',
+                budgetFlexibility: 'Elastyczność budżetu',
+                budgetRigid: 'Sztywny',
+                budgetFlexiblePartially: 'Częściowo elastyczny',
+                budgetFlexibleFull: 'Bardzo elastyczny',
+                deadline: 'Termin realizacji',
+                milestones: 'Kamienie milowe (opcjonalne)',
+                milestonesPlaceholder: 'np. Koncepcja do 15.02, Realizacja do 15.03',
+                fileLinks: 'Linki do plików',
+                fileLinksPlaceholder: 'Google Drive, Dropbox, OneDrive',
+                additionalNotes: 'Dodatkowe uwagi (opcjonalne)',
+                additionalNotesPlaceholder: 'Coś, czego nie wspomniano?',
+                howDidYouFindUs: 'Jak nas znalazłeś?',
+                referral: 'Rekomendacja',
+                googleSearch: 'Google',
+                socialMediaFound: 'Media społeczne',
+                eventFound: 'Event',
+                otherFound: 'Inne',
+
+                // Buttons
+                previous: 'Wstecz',
+                next: 'Dalej →',
+                submitBrief: 'Wyślij brief',
+
+                // Thank You
+                thankYouTitle: 'Dziękujemy!',
+                thankYouMessage: 'Twój brief został wysłany. Skontaktujemy się wkrótce.',
+                tagline: 'Strategia · Design · Digital',
+
+                // Optional labels
+                optional: '(opcjonalne)',
+                required: 'wymagane',
+            },
+            en: {
+                // Global
+                languageToggle: 'EN | PL',
+                saving: 'Saving...',
+                saved: 'Saved',
+
+                // Welcome Screen
+                welcomeHeading: 'Let\'s Begin',
+                briefTitle: 'Project Brief',
+                estimatedTime: 'Estimated time: 15-25 minutes',
+                autoSave: 'Your progress is saved automatically',
+                stepsInfo: '10 steps · You can skip optional fields',
+                startButton: 'Start →',
+
+                // Steps
+                stepOf: 'Step',
+
+                step0Title: 'Brief Type & Project Overview',
+                step0Desc: 'Start with basic information about your project',
+                briefType: 'Type of Brief',
+                briefTypeOpt1: 'Strategy & Design',
+                briefTypeOpt2: 'Website',
+                briefTypeOpt3: 'New Branding',
+                briefTypeOpt4: 'Full Rebranding',
+                briefTypeOpt5: 'Marketing Materials',
+                briefTypeOpt6: 'Other',
+                projectName: 'Project Name',
+                projectNamePlaceholder: 'e.g., Rebrand 2026, New E-commerce Site',
+                projectDescription: 'Project Description',
+                projectDescriptionPlaceholder: 'Describe the project in a few sentences',
+                projectTimeline: 'Project Timeline',
+                projectTimelineOpt1: 'ASAP (1-2 weeks)',
+                projectTimelineOpt2: '1 month',
+                projectTimelineOpt3: '2-3 months',
+                projectTimelineOpt4: '3-6 months',
+                projectTimelineOpt5: 'Flexible',
+                urgencyLevel: 'Urgency Level',
+                urgencyStandard: 'Standard',
+                urgencyHigh: 'High',
+                urgencyCritical: 'Critical',
+
+                step1Title: 'Company Presentation',
+                step1Desc: 'Tell us about your company',
+                companyName: 'Company Name',
+                companyNamePlaceholder: 'e.g., Tech Solutions Inc.',
+                companyDescription: 'Company Description',
+                companyDescriptionPlaceholder: 'What does the company offer?',
+                companyAge: 'How long have you been operating?',
+                companyAgePlaceholder: 'e.g., Since 2015',
+                companyAdjectives: 'Company Adjectives',
+                companyAdjectivesPlaceholder: 'Provide 5-10 adjectives describing the company',
+                companyMission: 'Company Mission',
+                companyMissionPlaceholder: 'What is the company\'s purpose?',
+                companyVision: 'Company Vision',
+                companyVisionPlaceholder: 'Long-term ambitions?',
+                businessScope: 'Business Scope',
+                businessScopePlaceholder: 'Geographic scope and industry',
+                offerTarget: 'Who is your offer directed to?',
+                offerTargetPlaceholder: 'Describe your ideal customers',
+
+                step2Title: 'Market & Competition',
+                step2Desc: 'Analysis of your market environment',
+                marketPotential: 'Market Growth Potential',
+                marketPotentialPlaceholder: 'Describe the growth potential',
+                keyTrends: 'Key Trends',
+                keyTrendsPlaceholder: 'What are the main industry trends?',
+                marketThreats: 'Threats',
+                marketThreatsPlaceholder: 'What are the market threats?',
+                mainCompetitors: 'Main Competitors',
+                mainCompetitorsPlaceholder: 'List main players and their market share',
+                competitorStrengthsWeaknesses: 'Competitors\' Strengths & Weaknesses',
+                competitorStrengthsWeaknessesPlaceholder: 'Compare your competitors',
+                competitorWebsites: 'Competitor Websites',
+                competitorWebsitesPlaceholder: 'Competitor URLs (one per line)',
+                marketSaturation: 'Market Saturation',
+                marketSaturationLow: 'Low',
+                marketSaturationMedium: 'Medium',
+                marketSaturationHigh: 'High',
+                marketSaturationVeryHigh: 'Very High',
+                competitiveAdvantage: 'Your Competitive Advantage',
+                competitiveAdvantagePlaceholder: 'What makes you stand out?',
+
+                step3Title: 'Brand Situation',
+                step3Desc: 'History and current brand position',
+                brandHistory: 'Brand History',
+                brandHistoryPlaceholder: 'How has your brand evolved?',
+                currentMarketPosition: 'Current Market Position',
+                currentMarketPositionPlaceholder: 'How is the brand currently perceived?',
+                brandPerception: 'Brand Perception',
+                brandPerceptionPlaceholder: 'How do customers see it?',
+                growthAmbitions: 'Growth Ambitions',
+                growthAmbitionsPlaceholder: 'What is your goal?',
+                currentRelationship: 'Current Relationship with Brand (optional)',
+                currentRelationshipPlaceholder: 'If we\'ve worked together before...',
+
+                step4Title: 'Product & Offer',
+                step4Desc: 'Details about your product and promotion strategy',
+                offerCharacteristics: 'Offer Characteristics',
+                offerCharacteristicsPlaceholder: 'Describe your product/service',
+                uniqueDifferentiators: 'Unique Differentiators',
+                uniqueDifferentiatorsPlaceholder: 'What makes it unique?',
+                pricingPosition: 'Pricing Position',
+                pricingEconomic: 'Economic',
+                pricingMid: 'Mid-Market',
+                pricingPremium: 'Premium',
+                pricingLuxury: 'Luxury',
+                serviceScopeDifferentiator: 'Service Scope (optional)',
+                serviceScopeDifferentiatorPlaceholder: 'Additional services or support?',
+                promotionStrategy: 'Promotion Strategy',
+                promotionStrategyPlaceholder: 'How will you promote the product?',
+                promotionChannels: 'Promotion Channels',
+                socialMedia: 'Social Media',
+                googleAds: 'Google Ads',
+                print: 'Print',
+                outdoor: 'Outdoor',
+                emailMarketing: 'Email Marketing',
+                events: 'Events',
+                influencers: 'Influencers',
+                contentMarketing: 'Content Marketing',
+                other: 'Other',
+                brandAmbitions: 'Brand Ambitions',
+                brandAmbitionsPlaceholder: 'What is your ideal brand image?',
+
+                step5Title: 'Target Audience',
+                step5Desc: 'Who are your ideal customers?',
+                demographics: 'Demographics',
+                demographicsPlaceholder: 'Age, gender, income, location',
+                psychographics: 'Psychographics',
+                psychographicsPlaceholder: 'Values, lifestyle',
+                audiencePainPoints: 'Audience Pain Points',
+                audiencePainPointsPlaceholder: 'What problems do you solve?',
+                audienceSize: 'Target Audience Size (optional)',
+                audienceSizePlaceholder: 'e.g., 50,000 people',
+                existingRelationship: 'Existing Relationship (optional)',
+                existingRelationshipPlaceholder: 'Do they have experience with you?',
+
+                step6Title: 'Brand Promise & Positioning',
+                step6Desc: 'The core value of your brand',
+                positioningStatement: 'Positioning Statement',
+                positioningHelp: 'Template: For [target audience], [brand] is [category], which delivers [benefit], because [reason]',
+                keyConsumerProposition: 'Key Consumer Proposition',
+                emotionalBenefits: 'Emotional Benefits',
+                rationalBenefits: 'Rational Benefits',
+                propositionSupport: 'Support for Proposition',
+                brandValues: 'Brand Values',
+                brandPersonality: 'Brand Personality',
+                communicationStyle: 'Communication Style',
+                keyMessages: 'Key Messages',
+
+                step7Title: 'Design Guidelines',
+                step7Desc: 'Aesthetics and visual character',
+                referenceLinks: 'Reference Links',
+                referenceLinksPlaceholder: 'Websites/profiles as references (URLs)',
+                referenceNotes: 'Reference Notes',
+                referenceNotesPlaceholder: 'What do you like about these references?',
+                projectCharacter: 'Project Character',
+                projectCharacterPlaceholder: 'Adjectives describing the character',
+                importantDesignElements: 'Important Design Elements (optional)',
+                importantDesignElementsPlaceholder: 'Elements that must be included',
+                designCharacteristics: 'Design Characteristics (scale 0-10)',
+                designCharacteristicsSubtext: 'Move the slider to set the intensity of each characteristic',
+                minimalist: 'Minimalist',
+                casual: 'Casual',
+                vibrant: 'Vibrant',
+                innovative: 'Innovative',
+                dynamic: 'Dynamic',
+                aggressive: 'Aggressive',
+                powerful: 'Powerful/Strong',
+                rich: 'Rich',
+                restrained: 'Restrained',
+                calm: 'Calm',
+                traditional: 'Traditional',
+                majestic: 'Majestic',
+                responsible: 'Responsible',
+                delicate: 'Delicate/Light',
+
+                step8Title: 'Website',
+                step8Desc: 'Requirements and goals for your website',
+                currentWebsite: 'Current Website (if exists)',
+                oldWebsiteUrl: 'Current Website URL (optional)',
+                oldWebsiteUrlPlaceholder: 'https://...',
+                oldWebsitePros: 'What works well? (optional)',
+                oldWebsiteProsPaceholder: 'List positive aspects',
+                oldWebsiteCons: 'What needs improvement? (optional)',
+                oldWebsiteConsPlaceholder: 'List negative aspects',
+                oldWebsiteIssues: 'Technical Issues (optional)',
+                oldWebsiteIssuesPlaceholder: 'Bugs, vulnerabilities, speed?',
+                oldWebsiteAge: 'Website Age (optional)',
+                oldWebsiteAgePlaceholder: 'e.g., 3 years',
+                websiteTraffic: 'Website Traffic (optional)',
+                websiteTrafficPlaceholder: 'e.g., 5000 users/month',
+                newWebsite: 'New Website',
+                languageRequirements: 'Required Languages',
+                polish: 'Polish',
+                english: 'English',
+                german: 'German',
+                french: 'French',
+                another: 'Other',
+                websiteGoals: 'Website Goals',
+                websiteGoalsPlaceholder: 'What should the new website achieve?',
+                primaryPurpose: 'Primary Purpose',
+                leadGeneration: 'Lead Generation',
+                brandAwareness: 'Brand Awareness',
+                ecommerce: 'E-commerce',
+                portfolio: 'Portfolio',
+                informational: 'Informational',
+                contentResponsibility: 'Content Responsible (optional)',
+                contentResponsibilityPlaceholder: 'Name/role of person',
+                hasContentResources: 'Do you have website materials?',
+                yes: 'Yes',
+                no: 'No',
+                partially: 'Partially',
+                hasPhotosVideos: 'Photos & Videos?',
+                hasBrandAssets: 'Brand Assets (logo, colors, fonts)?',
+                complete: 'Complete',
+                partial: 'Partial',
+                needToCreate: 'Need to Create',
+
+                step9Title: 'Budget, Timeline & Notes',
+                step9Desc: 'Final project details',
+                totalBudget: 'Total Budget',
+                totalBudgetPlaceholder: 'e.g., $50,000',
+                designBudget: 'Design Budget (optional)',
+                designBudgetPlaceholder: 'e.g., $30,000',
+                marketingBudget: 'Marketing Budget (optional)',
+                marketingBudgetPlaceholder: 'e.g., $20,000',
+                budgetFlexibility: 'Budget Flexibility',
+                budgetRigid: 'Rigid',
+                budgetFlexiblePartially: 'Partially Flexible',
+                budgetFlexibleFull: 'Very Flexible',
+                deadline: 'Project Deadline',
+                milestones: 'Milestones (optional)',
+                milestonesPlaceholder: 'e.g., Concept by 2/15, Implementation by 3/15',
+                fileLinks: 'File Links',
+                fileLinksPlaceholder: 'Google Drive, Dropbox, OneDrive',
+                additionalNotes: 'Additional Notes (optional)',
+                additionalNotesPlaceholder: 'Anything we missed?',
+                howDidYouFindUs: 'How did you find us?',
+                referral: 'Referral',
+                googleSearch: 'Google',
+                socialMediaFound: 'Social Media',
+                eventFound: 'Event',
+                otherFound: 'Other',
+
+                // Buttons
+                previous: 'Back',
+                next: 'Next →',
+                submitBrief: 'Submit Brief',
+
+                // Thank You
+                thankYouTitle: 'Thank You!',
+                thankYouMessage: 'Your brief has been submitted. We\'ll be in touch soon.',
+                tagline: 'Strategy · Design · Digital',
+
+                // Optional labels
+                optional: '(optional)',
+                required: 'required',
+            }
+        };
+
+        function HanoiBriefWizard() {
+            const [language, setLanguage] = useState('pl');
+            const [currentStep, setCurrentStep] = useState(-1); // -1 = welcome, 10 = thank you
+            const [formData, setFormData] = useState({
+                step0: {},
+                step1: {},
+                step2: {},
+                step3: {},
+                step4: {},
+                step5: {},
+                step6: {},
+                step7: {},
+                step8: {},
+                step9: {},
+            });
+            const [saveStatus, setSaveStatus] = useState('');
+            const [isSubmitted, setIsSubmitted] = useState(false);
+
+            const t = translations[language];
+
+            const updateField = (stepKey, fieldName, value) => {
+                setFormData(prev => ({
+                    ...prev,
+                    [stepKey]: {
+                        ...prev[stepKey],
+                        [fieldName]: value
+                    }
+                }));
+                showSaveStatus();
+            };
+
+            const showSaveStatus = () => {
+                setSaveStatus('saving');
+                setTimeout(() => {
+                    const time = new Date().toLocaleTimeString(language === 'pl' ? 'pl-PL' : 'en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    setSaveStatus(`saved-${time}`);
+                    setTimeout(() => setSaveStatus(''), 3000);
+                }, 800);
+            };
+
+            const nextStep = () => {
+                if (currentStep < 9) setCurrentStep(currentStep + 1);
+            };
+
+            const prevStep = () => {
+                if (currentStep > -1) setCurrentStep(currentStep - 1);
+            };
+
+            const goToStep = (step) => {
+                setCurrentStep(step);
+            };
+
+            const submitBrief = () => {
+                setIsSubmitted(true);
+                setCurrentStep(10);
+            };
+
+            if (isSubmitted && currentStep === 10) {
+                return <ThankYouScreen t={t} language={language} setLanguage={setLanguage} />;
+            }
+
+            if (currentStep === -1) {
+                return <WelcomeScreen t={t} onStart={() => setCurrentStep(0)} language={language} setLanguage={setLanguage} />;
+            }
+
+            const currentStepKey = `step${currentStep}`;
+            const currentStepData = formData[currentStepKey] || {};
+
+            return (
+                <div className="fade-in min-h-screen">
+                    {/* Top Bar */}
+                    <div className="frosted-glass sticky top-0 z-50">
+                        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="hanoi-logo sm">H</div>
+                                <span className="text-sm font-medium text-gray-700">
+                                    {t.stepOf} {currentStep + 1} {t.stepOf === 'Step' ? 'of' : 'z'} 10
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                {saveStatus && (
+                                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                                        {saveStatus.startsWith('saving') && (
+                                            <>
+                                                <span className="inline-block spin">⚙</span>
+                                                {t.saving}
+                                            </>
+                                        )}
+                                        {saveStatus.startsWith('saved') && (
+                                            <>
+                                                <span>✓</span>
+                                                {t.saved} {saveStatus.split('-')[1]}
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => setLanguage(language === 'pl' ? 'en' : 'pl')}
+                                    className="text-xs font-semibold px-3 py-1 rounded-full border border-gray-300 hover:border-gray-400 transition"
+                                >
+                                    {t.languageToggle}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="progress-bar">
+                            <div className="progress-bar-fill" style={{ width: `${((currentStep + 1) / 10) * 100}%` }}></div>
+                        </div>
+                    </div>
+
+                    {/* Steps */}
+                    <div className="max-w-2xl mx-auto px-4 py-12">
+                        {currentStep === 0 && (
+                            <Step0 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 1 && (
+                            <Step1 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 2 && (
+                            <Step2 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 3 && (
+                            <Step3 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 4 && (
+                            <Step4 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 5 && (
+                            <Step5 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 6 && (
+                            <Step6 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 7 && (
+                            <Step7 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 8 && (
+                            <Step8 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+                        {currentStep === 9 && (
+                            <Step9 t={t} data={currentStepData} updateField={(field, value) => updateField(currentStepKey, field, value)} />
+                        )}
+
+                        {/* Navigation */}
+                        <div className="mt-12 space-y-6">
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={prevStep}
+                                    disabled={currentStep === 0}
+                                    className="px-6 py-3 rounded-xl border border-gray-300 font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-400 transition"
+                                >
+                                    {t.previous}
+                                </button>
+                                {currentStep < 9 ? (
+                                    <button
+                                        onClick={nextStep}
+                                        className="ml-auto px-6 py-3 rounded-xl bg-[#E85D2C] text-white font-medium hover:bg-[#d64a1f] transition"
+                                    >
+                                        {t.next}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={submitBrief}
+                                        className="ml-auto px-8 py-3 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 transition"
+                                    >
+                                        {t.submitBrief}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Navigation Dots */}
+                            <div className="flex gap-2 justify-center">
+                                {Array.from({ length: 10 }).map((_, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => goToStep(idx)}
+                                        className={`nav-dot ${idx < currentStep ? 'past' : idx === currentStep ? 'current' : ''}`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function WelcomeScreen({ t, onStart, language, setLanguage }) {
+            return (
+                <div className="min-h-screen flex items-center justify-center px-4 py-12">
+                    <div className="absolute top-4 right-4">
+                        <button
+                            onClick={() => setLanguage(language === 'pl' ? 'en' : 'pl')}
+                            className="text-sm font-semibold px-4 py-2 rounded-full border border-gray-300 hover:border-gray-400 transition"
+                        >
+                            {t.languageToggle}
+                        </button>
+                    </div>
+                    <div className="max-w-xl text-center">
+                        <div className="hanoi-logo mx-auto mb-8" style={{ width: '80px', height: '80px', fontSize: '32px' }}>H</div>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-2">{t.welcomeHeading}</h1>
+                        <p className="text-gray-500 text-lg mb-8">{t.briefTitle}</p>
+
+                        <div className="space-y-3 mb-12">
+                            <div className="flex items-start gap-3 p-4 bg-[#E85D2C]/5 rounded-xl border border-[#E85D2C]/20">
+                                <span className="text-xl mt-1">⏱</span>
+                                <span className="text-left text-sm text-gray-700">{t.estimatedTime}</span>
+                            </div>
+                            <div className="flex items-start gap-3 p-4 bg-[#E85D2C]/5 rounded-xl border border-[#E85D2C]/20">
+                                <span className="text-xl mt-1">💾</span>
+                                <span className="text-left text-sm text-gray-700">{t.autoSave}</span>
+                            </div>
+                        </div>
+
+                        <p className="text-gray-500 text-sm mb-8">{t.stepsInfo}</p>
+
+                        <button
+                            onClick={onStart}
+                            className="w-full px-8 py-4 rounded-xl bg-[#E85D2C] text-white font-bold text-lg hover:bg-[#d64a1f] transition"
+                        >
+                            {t.startButton}
+                        </button>
+
+                        <p className="text-gray-400 text-xs mt-8">{t.tagline}</p>
+                    </div>
+                </div>
+            );
+        }
+
+        function ThankYouScreen({ t, language, setLanguage }) {
+            return (
+                <div className="min-h-screen flex items-center justify-center px-4 py-12">
+                    <div className="absolute top-4 right-4">
+                        <button
+                            onClick={() => setLanguage(language === 'pl' ? 'en' : 'pl')}
+                            className="text-sm font-semibold px-4 py-2 rounded-full border border-gray-300 hover:border-gray-400 transition"
+                        >
+                            {t.languageToggle}
+                        </button>
+                    </div>
+                    <div className="max-w-xl text-center">
+                        <div className="text-7xl mb-8">✓</div>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-4">{t.thankYouTitle}</h1>
+                        <p className="text-gray-600 text-lg mb-12">{t.thankYouMessage}</p>
+                        <div className="hanoi-logo mx-auto mb-8" style={{ width: '60px', height: '60px', fontSize: '24px' }}>H</div>
+                        <p className="text-gray-400 text-sm">{t.tagline}</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Step Components
+        function Step0({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step0Title} description={t.step0Desc}>
+                    <FormField label={t.briefType} required>
+                        <select value={data.brief_type || ''} onChange={(e) => updateField('brief_type', e.target.value)}>
+                            <option value="">{t.briefType}</option>
+                            <option value="strategy">{t.briefTypeOpt1}</option>
+                            <option value="website">{t.briefTypeOpt2}</option>
+                            <option value="newbranding">{t.briefTypeOpt3}</option>
+                            <option value="rebranding">{t.briefTypeOpt4}</option>
+                            <option value="marketing">{t.briefTypeOpt5}</option>
+                            <option value="other">{t.briefTypeOpt6}</option>
+                        </select>
+                    </FormField>
+                    <FormField label={t.projectName} required>
+                        <input type="text" placeholder={t.projectNamePlaceholder} value={data.project_name || ''} onChange={(e) => updateField('project_name', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.projectDescription}>
+                        <textarea placeholder={t.projectDescriptionPlaceholder} value={data.project_description || ''} onChange={(e) => updateField('project_description', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.projectTimeline}>
+                        <select value={data.project_timeline || ''} onChange={(e) => updateField('project_timeline', e.target.value)}>
+                            <option value="">{t.projectTimeline}</option>
+                            <option value="asap">{t.projectTimelineOpt1}</option>
+                            <option value="1m">{t.projectTimelineOpt2}</option>
+                            <option value="2-3m">{t.projectTimelineOpt3}</option>
+                            <option value="3-6m">{t.projectTimelineOpt4}</option>
+                            <option value="flexible">{t.projectTimelineOpt5}</option>
+                        </select>
+                    </FormField>
+                    <FormField label={t.urgencyLevel}>
+                        <div className="space-y-2">
+                            {['standard', 'high', 'critical'].map(level => (
+                                <label key={level} className={`radio-card block cursor-pointer ${data.urgency_level === level ? 'selected' : ''}`}>
+                                    <input type="radio" name="urgency" value={level} checked={data.urgency_level === level} onChange={(e) => updateField('urgency_level', e.target.value)} style={{ display: 'none' }} />
+                                    {level === 'standard' && t.urgencyStandard}
+                                    {level === 'high' && t.urgencyHigh}
+                                    {level === 'critical' && t.urgencyCritical}
+                                </label>
+                            ))}
+                        </div>
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step1({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step1Title} description={t.step1Desc}>
+                    <FormField label={t.companyName} required>
+                        <input type="text" placeholder={t.companyNamePlaceholder} value={data.company_name || ''} onChange={(e) => updateField('company_name', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.companyDescription}>
+                        <textarea placeholder={t.companyDescriptionPlaceholder} value={data.company_description || ''} onChange={(e) => updateField('company_description', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.companyAge}>
+                        <input type="text" placeholder={t.companyAgePlaceholder} value={data.company_age || ''} onChange={(e) => updateField('company_age', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.companyAdjectives}>
+                        <textarea placeholder={t.companyAdjectivesPlaceholder} value={data.company_adjectives || ''} onChange={(e) => updateField('company_adjectives', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.companyMission}>
+                        <textarea placeholder={t.companyMissionPlaceholder} value={data.company_mission || ''} onChange={(e) => updateField('company_mission', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.companyVision}>
+                        <textarea placeholder={t.companyVisionPlaceholder} value={data.company_vision || ''} onChange={(e) => updateField('company_vision', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.businessScope}>
+                        <textarea placeholder={t.businessScopePlaceholder} value={data.business_scope || ''} onChange={(e) => updateField('business_scope', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.offerTarget}>
+                        <textarea placeholder={t.offerTargetPlaceholder} value={data.offer_target || ''} onChange={(e) => updateField('offer_target', e.target.value)} />
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step2({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step2Title} description={t.step2Desc}>
+                    <FormField label={t.marketPotential}>
+                        <textarea placeholder={t.marketPotentialPlaceholder} value={data.market_potential || ''} onChange={(e) => updateField('market_potential', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.keyTrends}>
+                        <textarea placeholder={t.keyTrendsPlaceholder} value={data.key_trends || ''} onChange={(e) => updateField('key_trends', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.marketThreats}>
+                        <textarea placeholder={t.marketThreatsPlaceholder} value={data.market_threats || ''} onChange={(e) => updateField('market_threats', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.mainCompetitors}>
+                        <textarea placeholder={t.mainCompetitorsPlaceholder} value={data.main_competitors || ''} onChange={(e) => updateField('main_competitors', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.competitorStrengthsWeaknesses}>
+                        <textarea placeholder={t.competitorStrengthsWeaknessesPlaceholder} value={data.competitor_strengths_weaknesses || ''} onChange={(e) => updateField('competitor_strengths_weaknesses', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.competitorWebsites}>
+                        <textarea placeholder={t.competitorWebsitesPlaceholder} value={data.competitor_websites || ''} onChange={(e) => updateField('competitor_websites', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.marketSaturation}>
+                        <div className="space-y-2">
+                            {['low', 'medium', 'high', 'veryhigh'].map(level => (
+                                <label key={level} className={`radio-card block cursor-pointer ${data.market_saturation === level ? 'selected' : ''}`}>
+                                    <input type="radio" name="saturation" value={level} checked={data.market_saturation === level} onChange={(e) => updateField('market_saturation', e.target.value)} style={{ display: 'none' }} />
+                                    {level === 'low' && t.marketSaturationLow}
+                                    {level === 'medium' && t.marketSaturationMedium}
+                                    {level === 'high' && t.marketSaturationHigh}
+                                    {level === 'veryhigh' && t.marketSaturationVeryHigh}
+                                </label>
+                            ))}
+                        </div>
+                    </FormField>
+                    <FormField label={t.competitiveAdvantage}>
+                        <textarea placeholder={t.competitiveAdvantagePlaceholder} value={data.competitive_advantage || ''} onChange={(e) => updateField('competitive_advantage', e.target.value)} />
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step3({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step3Title} description={t.step3Desc}>
+                    <FormField label={t.brandHistory}>
+                        <textarea placeholder={t.brandHistoryPlaceholder} value={data.brand_history || ''} onChange={(e) => updateField('brand_history', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.currentMarketPosition}>
+                        <textarea placeholder={t.currentMarketPositionPlaceholder} value={data.current_market_position || ''} onChange={(e) => updateField('current_market_position', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.brandPerception}>
+                        <textarea placeholder={t.brandPerceptionPlaceholder} value={data.brand_perception || ''} onChange={(e) => updateField('brand_perception', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.growthAmbitions}>
+                        <textarea placeholder={t.growthAmbitionsPlaceholder} value={data.growth_ambitions || ''} onChange={(e) => updateField('growth_ambitions', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.currentRelationship} optional>
+                        <textarea placeholder={t.currentRelationshipPlaceholder} value={data.current_relationship || ''} onChange={(e) => updateField('current_relationship', e.target.value)} />
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step4({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step4Title} description={t.step4Desc}>
+                    <FormField label={t.offerCharacteristics}>
+                        <textarea placeholder={t.offerCharacteristicsPlaceholder} value={data.offer_characteristics || ''} onChange={(e) => updateField('offer_characteristics', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.uniqueDifferentiators}>
+                        <textarea placeholder={t.uniqueDifferentiatorsPlaceholder} value={data.unique_differentiators || ''} onChange={(e) => updateField('unique_differentiators', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.pricingPosition}>
+                        <select value={data.pricing_position || ''} onChange={(e) => updateField('pricing_position', e.target.value)}>
+                            <option value="">{t.pricingPosition}</option>
+                            <option value="economic">{t.pricingEconomic}</option>
+                            <option value="mid">{t.pricingMid}</option>
+                            <option value="premium">{t.pricingPremium}</option>
+                            <option value="luxury">{t.pricingLuxury}</option>
+                        </select>
+                    </FormField>
+                    <FormField label={t.serviceScopeDifferentiator} optional>
+                        <textarea placeholder={t.serviceScopeDifferentiatorPlaceholder} value={data.service_scope_differentiator || ''} onChange={(e) => updateField('service_scope_differentiator', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.promotionStrategy}>
+                        <textarea placeholder={t.promotionStrategyPlaceholder} value={data.promotion_strategy || ''} onChange={(e) => updateField('promotion_strategy', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.promotionChannels}>
+                        <div className="grid grid-cols-2 gap-3">
+                            {['social', 'google', 'print', 'outdoor', 'email', 'events', 'influencers', 'content', 'other'].map(channel => {
+                                const checked = (data.promotion_channels || []).includes(channel);
+                                return (
+                                    <label key={channel} className={`checkbox-card cursor-pointer ${checked ? 'selected' : ''}`}>
+                                        <input
+                                            type="checkbox"
+                                            value={channel}
+                                            checked={checked}
+                                            onChange={(e) => {
+                                                let channels = data.promotion_channels || [];
+                                                if (e.target.checked) {
+                                                    channels = [...channels, channel];
+                                                } else {
+                                                    channels = channels.filter(c => c !== channel);
+                                                }
+                                                updateField('promotion_channels', channels);
+                                            }}
+                                            style={{ display: 'none' }}
+                                        />
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">
+                                                {channel === 'social' && t.socialMedia}
+                                                {channel === 'google' && t.googleAds}
+                                                {channel === 'print' && t.print}
+                                                {channel === 'outdoor' && t.outdoor}
+                                                {channel === 'email' && t.emailMarketing}
+                                                {channel === 'events' && t.events}
+                                                {channel === 'influencers' && t.influencers}
+                                                {channel === 'content' && t.contentMarketing}
+                                                {channel === 'other' && t.other}
+                                            </span>
+                                            {checked && <span style={{ color: '#E85D2C' }}>✓</span>}
+                                        </div>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </FormField>
+                    <FormField label={t.brandAmbitions}>
+                        <textarea placeholder={t.brandAmbitionsPlaceholder} value={data.brand_ambitions || ''} onChange={(e) => updateField('brand_ambitions', e.target.value)} />
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step5({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step5Title} description={t.step5Desc}>
+                    <FormField label={t.demographics}>
+                        <textarea placeholder={t.demographicsPlaceholder} value={data.demographics || ''} onChange={(e) => updateField('demographics', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.psychographics}>
+                        <textarea placeholder={t.psychographicsPlaceholder} value={data.psychographics || ''} onChange={(e) => updateField('psychographics', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.audiencePainPoints}>
+                        <textarea placeholder={t.audiencePainPointsPlaceholder} value={data.audience_pain_points || ''} onChange={(e) => updateField('audience_pain_points', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.audienceSize} optional>
+                        <input type="text" placeholder={t.audienceSizePlaceholder} value={data.audience_size || ''} onChange={(e) => updateField('audience_size', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.existingRelationship} optional>
+                        <textarea placeholder={t.existingRelationshipPlaceholder} value={data.existing_relationship || ''} onChange={(e) => updateField('existing_relationship', e.target.value)} />
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step6({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step6Title} description={t.step6Desc}>
+                    <FormField label={t.positioningStatement}>
+                        <textarea placeholder={t.positioningStatement} value={data.positioning_statement || ''} onChange={(e) => updateField('positioning_statement', e.target.value)} rows={3} />
+                        <p className="text-xs text-gray-500 mt-2">{t.positioningHelp}</p>
+                    </FormField>
+                    <FormField label={t.keyConsumerProposition}>
+                        <textarea placeholder={t.keyConsumerProposition} value={data.key_consumer_proposition || ''} onChange={(e) => updateField('key_consumer_proposition', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.emotionalBenefits}>
+                        <textarea placeholder={t.emotionalBenefits} value={data.emotional_benefits || ''} onChange={(e) => updateField('emotional_benefits', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.rationalBenefits}>
+                        <textarea placeholder={t.rationalBenefits} value={data.rational_benefits || ''} onChange={(e) => updateField('rational_benefits', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.propositionSupport}>
+                        <textarea placeholder={t.propositionSupport} value={data.proposition_support || ''} onChange={(e) => updateField('proposition_support', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.brandValues}>
+                        <textarea placeholder={t.brandValues} value={data.brand_values || ''} onChange={(e) => updateField('brand_values', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.brandPersonality}>
+                        <textarea placeholder={t.brandPersonality} value={data.brand_personality || ''} onChange={(e) => updateField('brand_personality', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.communicationStyle}>
+                        <textarea placeholder={t.communicationStyle} value={data.communication_style || ''} onChange={(e) => updateField('communication_style', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.keyMessages}>
+                        <textarea placeholder={t.keyMessages} value={data.key_messages || ''} onChange={(e) => updateField('key_messages', e.target.value)} />
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step7({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step7Title} description={t.step7Desc}>
+                    <FormField label={t.referenceLinks}>
+                        <textarea placeholder={t.referenceLinksPlaceholder} value={data.reference_links || ''} onChange={(e) => updateField('reference_links', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.referenceNotes}>
+                        <textarea placeholder={t.referenceNotesPlaceholder} value={data.reference_notes || ''} onChange={(e) => updateField('reference_notes', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.projectCharacter}>
+                        <textarea placeholder={t.projectCharacterPlaceholder} value={data.project_character || ''} onChange={(e) => updateField('project_character', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.importantDesignElements} optional>
+                        <textarea placeholder={t.importantDesignElementsPlaceholder} value={data.important_design_elements || ''} onChange={(e) => updateField('important_design_elements', e.target.value)} />
+                    </FormField>
+
+                    <div className="section-header">{t.designCharacteristics}</div>
+                    <p className="section-subtext mb-6">{t.designCharacteristicsSubtext}</p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {[
+                            { key: 'minimalist', label: t.minimalist },
+                            { key: 'casual', label: t.casual },
+                            { key: 'vibrant', label: t.vibrant },
+                            { key: 'innovative', label: t.innovative },
+                            { key: 'dynamic', label: t.dynamic },
+                            { key: 'aggressive', label: t.aggressive },
+                            { key: 'powerful', label: t.powerful },
+                            { key: 'rich', label: t.rich },
+                            { key: 'restrained', label: t.restrained },
+                            { key: 'calm', label: t.calm },
+                            { key: 'traditional', label: t.traditional },
+                            { key: 'majestic', label: t.majestic },
+                            { key: 'responsible', label: t.responsible },
+                            { key: 'delicate', label: t.delicate },
+                        ].map(({ key, label }) => (
+                            <div key={key}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-medium text-gray-900">{label}</label>
+                                    <span className="text-sm font-semibold px-2 py-1 rounded bg-[#E85D2C]/10 text-[#E85D2C]">{data[key] || 0}/10</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="10"
+                                    value={data[key] || 0}
+                                    onChange={(e) => updateField(key, parseInt(e.target.value))}
+                                    className="w-full"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </StepCard>
+            );
+        }
+
+        function Step8({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step8Title} description={t.step8Desc}>
+                    <div className="section-header">{t.currentWebsite}</div>
+
+                    <FormField label={t.oldWebsiteUrl} optional>
+                        <input type="url" placeholder={t.oldWebsiteUrlPlaceholder} value={data.old_website_url || ''} onChange={(e) => updateField('old_website_url', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.oldWebsitePros} optional>
+                        <textarea placeholder={t.oldWebsiteProsPaceholder} value={data.old_website_pros || ''} onChange={(e) => updateField('old_website_pros', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.oldWebsiteCons} optional>
+                        <textarea placeholder={t.oldWebsiteConsPlaceholder} value={data.old_website_cons || ''} onChange={(e) => updateField('old_website_cons', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.oldWebsiteIssues} optional>
+                        <textarea placeholder={t.oldWebsiteIssuesPlaceholder} value={data.old_website_issues || ''} onChange={(e) => updateField('old_website_issues', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.oldWebsiteAge} optional>
+                        <input type="text" placeholder={t.oldWebsiteAgePlaceholder} value={data.old_website_age || ''} onChange={(e) => updateField('old_website_age', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.websiteTraffic} optional>
+                        <input type="text" placeholder={t.websiteTrafficPlaceholder} value={data.website_traffic || ''} onChange={(e) => updateField('website_traffic', e.target.value)} />
+                    </FormField>
+
+                    <div className="section-header">{t.newWebsite}</div>
+
+                    <FormField label={t.languageRequirements}>
+                        <div className="grid grid-cols-2 gap-3">
+                            {['polish', 'english', 'german', 'french', 'other'].map(lang => {
+                                const checked = (data.language_requirements || []).includes(lang);
+                                return (
+                                    <label key={lang} className={`checkbox-card cursor-pointer ${checked ? 'selected' : ''}`}>
+                                        <input
+                                            type="checkbox"
+                                            value={lang}
+                                            checked={checked}
+                                            onChange={(e) => {
+                                                let langs = data.language_requirements || [];
+                                                if (e.target.checked) {
+                                                    langs = [...langs, lang];
+                                                } else {
+                                                    langs = langs.filter(l => l !== lang);
+                                                }
+                                                updateField('language_requirements', langs);
+                                            }}
+                                            style={{ display: 'none' }}
+                                        />
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">
+                                                {lang === 'polish' && t.polish}
+                                                {lang === 'english' && t.english}
+                                                {lang === 'german' && t.german}
+                                                {lang === 'french' && t.french}
+                                                {lang === 'other' && t.another}
+                                            </span>
+                                            {checked && <span style={{ color: '#E85D2C' }}>✓</span>}
+                                        </div>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </FormField>
+
+                    <FormField label={t.websiteGoals}>
+                        <textarea placeholder={t.websiteGoalsPlaceholder} value={data.website_goals || ''} onChange={(e) => updateField('website_goals', e.target.value)} />
+                    </FormField>
+
+                    <FormField label={t.primaryPurpose}>
+                        <div className="grid grid-cols-2 gap-3">
+                            {['leads', 'awareness', 'ecommerce', 'portfolio', 'info', 'other'].map(purpose => {
+                                const checked = (data.primary_purpose || []).includes(purpose);
+                                return (
+                                    <label key={purpose} className={`checkbox-card cursor-pointer ${checked ? 'selected' : ''}`}>
+                                        <input
+                                            type="checkbox"
+                                            value={purpose}
+                                            checked={checked}
+                                            onChange={(e) => {
+                                                let purposes = data.primary_purpose || [];
+                                                if (e.target.checked) {
+                                                    purposes = [...purposes, purpose];
+                                                } else {
+                                                    purposes = purposes.filter(p => p !== purpose);
+                                                }
+                                                updateField('primary_purpose', purposes);
+                                            }}
+                                            style={{ display: 'none' }}
+                                        />
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">
+                                                {purpose === 'leads' && t.leadGeneration}
+                                                {purpose === 'awareness' && t.brandAwareness}
+                                                {purpose === 'ecommerce' && t.ecommerce}
+                                                {purpose === 'portfolio' && t.portfolio}
+                                                {purpose === 'info' && t.informational}
+                                                {purpose === 'other' && t.other}
+                                            </span>
+                                            {checked && <span style={{ color: '#E85D2C' }}>✓</span>}
+                                        </div>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </FormField>
+
+                    <FormField label={t.contentResponsibility} optional>
+                        <input type="text" placeholder={t.contentResponsibilityPlaceholder} value={data.content_responsibility || ''} onChange={(e) => updateField('content_responsibility', e.target.value)} />
+                    </FormField>
+
+                    <FormField label={t.hasContentResources}>
+                        <div className="space-y-2">
+                            {['yes', 'no', 'partial'].map(option => (
+                                <label key={option} className={`radio-card block cursor-pointer ${data.has_content_resources === option ? 'selected' : ''}`}>
+                                    <input type="radio" name="content" value={option} checked={data.has_content_resources === option} onChange={(e) => updateField('has_content_resources', e.target.value)} style={{ display: 'none' }} />
+                                    {option === 'yes' && t.yes}
+                                    {option === 'no' && t.no}
+                                    {option === 'partial' && t.partially}
+                                </label>
+                            ))}
+                        </div>
+                    </FormField>
+
+                    <FormField label={t.hasPhotosVideos}>
+                        <div className="space-y-2">
+                            {['yes', 'no', 'partial'].map(option => (
+                                <label key={option} className={`radio-card block cursor-pointer ${data.has_photos_videos === option ? 'selected' : ''}`}>
+                                    <input type="radio" name="photos" value={option} checked={data.has_photos_videos === option} onChange={(e) => updateField('has_photos_videos', e.target.value)} style={{ display: 'none' }} />
+                                    {option === 'yes' && t.yes}
+                                    {option === 'no' && t.no}
+                                    {option === 'partial' && t.partially}
+                                </label>
+                            ))}
+                        </div>
+                    </FormField>
+
+                    <FormField label={t.hasBrandAssets}>
+                        <div className="space-y-2">
+                            {['complete', 'partial', 'create'].map(option => (
+                                <label key={option} className={`radio-card block cursor-pointer ${data.has_brand_assets === option ? 'selected' : ''}`}>
+                                    <input type="radio" name="assets" value={option} checked={data.has_brand_assets === option} onChange={(e) => updateField('has_brand_assets', e.target.value)} style={{ display: 'none' }} />
+                                    {option === 'complete' && t.complete}
+                                    {option === 'partial' && t.partial}
+                                    {option === 'create' && t.needToCreate}
+                                </label>
+                            ))}
+                        </div>
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function Step9({ t, data, updateField }) {
+            return (
+                <StepCard title={t.step9Title} description={t.step9Desc}>
+                    <FormField label={t.totalBudget} required>
+                        <input type="text" placeholder={t.totalBudgetPlaceholder} value={data.total_budget || ''} onChange={(e) => updateField('total_budget', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.designBudget} optional>
+                        <input type="text" placeholder={t.designBudgetPlaceholder} value={data.design_budget || ''} onChange={(e) => updateField('design_budget', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.marketingBudget} optional>
+                        <input type="text" placeholder={t.marketingBudgetPlaceholder} value={data.marketing_budget || ''} onChange={(e) => updateField('marketing_budget', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.budgetFlexibility}>
+                        <div className="space-y-2">
+                            {['rigid', 'partial', 'full'].map(option => (
+                                <label key={option} className={`radio-card block cursor-pointer ${data.budget_flexibility === option ? 'selected' : ''}`}>
+                                    <input type="radio" name="flexibility" value={option} checked={data.budget_flexibility === option} onChange={(e) => updateField('budget_flexibility', e.target.value)} style={{ display: 'none' }} />
+                                    {option === 'rigid' && t.budgetRigid}
+                                    {option === 'partial' && t.budgetFlexiblePartially}
+                                    {option === 'full' && t.budgetFlexibleFull}
+                                </label>
+                            ))}
+                        </div>
+                    </FormField>
+                    <FormField label={t.deadline} required>
+                        <input type="date" value={data.deadline || ''} onChange={(e) => updateField('deadline', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.milestones} optional>
+                        <textarea placeholder={t.milestonesPlaceholder} value={data.milestones || ''} onChange={(e) => updateField('milestones', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.fileLinks} required>
+                        <textarea placeholder={t.fileLinksPlaceholder} value={data.file_links || ''} onChange={(e) => updateField('file_links', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.additionalNotes} optional>
+                        <textarea placeholder={t.additionalNotesPlaceholder} value={data.additional_notes || ''} onChange={(e) => updateField('additional_notes', e.target.value)} />
+                    </FormField>
+                    <FormField label={t.howDidYouFindUs}>
+                        <select value={data.how_did_you_find_us || ''} onChange={(e) => updateField('how_did_you_find_us', e.target.value)}>
+                            <option value="">{t.howDidYouFindUs}</option>
+                            <option value="referral">{t.referral}</option>
+                            <option value="google">{t.googleSearch}</option>
+                            <option value="social">{t.socialMediaFound}</option>
+                            <option value="event">{t.eventFound}</option>
+                            <option value="other">{t.otherFound}</option>
+                        </select>
+                    </FormField>
+                </StepCard>
+            );
+        }
+
+        function StepCard({ title, description, children }) {
+            return (
+                <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">{title}</h2>
+                    <p className="text-gray-500 text-lg mb-8">{description}</p>
+                    <div className="space-y-6">
+                        {children}
+                    </div>
+                </div>
+            );
+        }
+
+        function FormField({ label, required, optional, children }) {
+            return (
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                        {label}
+                        {required && <span className="text-red-500 ml-1">*</span>}
+                        {optional && <span className="text-gray-500 text-xs ml-2">(opcjonalne / optional)</span>}
+                    </label>
+                    {children}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<HanoiBriefWizard />);
+    </script>
+</body>
+</html>
