@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Briefer — Interactive Demo</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; margin: 0; }
+    .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .highlight-pulse { position: relative; }
+    .highlight-pulse::after { content: ''; position: absolute; inset: -8px; border: 3px solid #3b82f6; border-radius: 0.75rem; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; pointer-events: none; }
+    .tour-arrow { position: absolute; width: 0; height: 0; }
+    .smooth-transition { transition: all 0.3s ease-in-out; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const MOCK = {
+      admin: {
+        user: { id: '1', email: 'p.reszkovy@gmail.com', full_name: 'Reszek', role: 'master' },
+        stats: { total: 5, active: 2, completed: 1, agents: 3 }
+      },
+      agent: {
+        user: { id: '2', email: 'anna.k@studio.pl', full_name: 'Anna Kowalska', role: 'agent' },
+        stats: { total: 3, active: 1, completed: 1 }
+      },
+      agents: [
+        { id: '2', full_name: 'Anna Kowalska', email: 'anna.k@studio.pl', is_active: true, briefs: 12, brands: 2 },
+        { id: '3', full_name: 'Marek Wiśniewski', email: 'marek.w@design.pl', is_active: true, briefs: 8, brands: 1 },
+        { id: '4', full_name: 'Katarzyna Nowak', email: 'kasia.n@creative.pl', is_active: false, briefs: 3, brands: 1 },
+      ],
+      brands: [
+        { id: 'b1', owner_id: '2', owner_name: 'Anna Kowalska', name: 'FitStudio Pro', color: '#FF6B35', tone: 'przyjazny' },
+        { id: 'b2', owner_id: '2', owner_name: 'Anna Kowalska', name: 'Wellness Hub', color: '#2EC4B6', tone: 'neutralny' },
+        { id: 'b3', owner_id: '3', owner_name: 'Marek Wiśniewski', name: 'Design Marek', color: '#7B2D8E', tone: 'formalny' },
+        { id: 'b4', owner_id: '4', owner_name: 'Katarzyna Nowak', name: 'Creative Kasia', color: '#E63946', tone: 'przyjazny' },
+      ],
+      allBriefs: [
+        { id: 'br1', agent_id: '2', agent: 'Anna Kowalska', brand: 'FitStudio Pro', brandColor: '#FF6B35', title: 'Rebranding Zdrofit — Q1 2026', client: 'Zdrofit Sp. z o.o.', clientEmail: 'marketing@zdrofit.pl', status: 'in_progress', progress: 62, token: 'abc123xyz', created: '2026-02-01' },
+        { id: 'br2', agent_id: '2', agent: 'Anna Kowalska', brand: 'Wellness Hub', brandColor: '#2EC4B6', title: 'Kampania wellness — Spring 2026', client: 'BeWell Group', clientEmail: 'j.nowak@bewell.pl', status: 'completed', progress: 100, token: 'def456uvw', created: '2026-01-15' },
+        { id: 'br3', agent_id: '3', agent: 'Marek Wiśniewski', brand: 'Design Marek', brandColor: '#7B2D8E', title: 'UI/UX redesign — e-commerce', client: 'ShopMax', clientEmail: 'info@shopmax.com', status: 'sent', progress: 0, token: 'ghi789rst', created: '2026-02-05' },
+        { id: 'br4', agent_id: '2', agent: 'Anna Kowalska', brand: 'FitStudio Pro', brandColor: '#FF6B35', title: 'Social media kit — Instagram', client: 'FitLife24', clientEmail: 'social@fitlife24.pl', status: 'draft', progress: 0, token: 'jkl012mno', created: '2026-02-09' },
+        { id: 'br5', agent_id: '3', agent: 'Marek Wiśniewski', brand: 'Design Marek', brandColor: '#7B2D8E', title: 'Corporate identity audit', client: 'TechCorp', clientEmail: 'brand@techcorp.com', status: 'in_progress', progress: 37, token: 'pqr345stu', created: '2026-01-20' },
+      ],
+      wizardSteps: [
+        { key: 'overview', title: 'Przegląd projektu', desc: 'Podstawowe informacje', fields: [
+          { key: 'name', label: 'Nazwa projektu', type: 'text', placeholder: 'np. Rebranding Zdrofit' },
+          { key: 'type', label: 'Typ projektu', type: 'select', options: ['Rebranding', 'Kampania', 'Nowy produkt', 'Redesign', 'Social media'] },
+          { key: 'goals', label: 'Cele projektu', type: 'textarea', placeholder: 'Co chcesz osiągnąć?' },
+        ]},
+        { key: 'brand', title: 'Marka i identyfikacja', desc: 'Istniejące materiały', fields: [
+          { key: 'has_brand', label: 'Masz brand guidelines?', type: 'radio', options: ['Tak', 'Nie', 'Częściowo'] },
+          { key: 'brand_desc', label: 'Opis marki', type: 'textarea', placeholder: 'Jak opisujesz swoją markę?' },
+        ]},
+        { key: 'audience', title: 'Grupa docelowa', desc: 'Kto jest odbiorcą?', fields: [
+          { key: 'demographic', label: 'Demografia', type: 'text', placeholder: 'np. Kobiety 25-45' },
+          { key: 'psycho', label: 'Psychografia', type: 'textarea', placeholder: 'Wartości, zainteresowania' },
+        ]},
+        { key: 'scope', title: 'Zakres i deliverables', desc: 'Co dokładnie?', fields: [
+          { key: 'deliverables', label: 'Co trzeba zaprojektować?', type: 'checkbox', options: ['Logo', 'Strona www', 'Social media', 'Materiały drukowane'] },
+        ]},
+        { key: 'content', title: 'Treść i komunikacja', desc: 'Kluczowe przekazy', fields: [
+          { key: 'messages', label: 'Kluczowe przekazy', type: 'textarea', placeholder: 'Co musi powiedzieć projekt?' },
+          { key: 'tone', label: 'Ton komunikacji', type: 'select', options: ['Neutralny', 'Przyjazny', 'Formalny', 'Luksusowy'] },
+        ]},
+        { key: 'technical', title: 'Wymagania techniczne', desc: 'Platformy, ograniczenia', fields: [
+          { key: 'platforms', label: 'Platformy', type: 'checkbox', options: ['Web', 'Mobile', 'Print', 'Social media'] },
+        ]},
+        { key: 'budget', title: 'Budżet i harmonogram', desc: 'Ramy finansowe', fields: [
+          { key: 'budget', label: 'Zakres budżetu', type: 'select', options: ['< 10 000 PLN', '10-25k', '25-50k', '50-100k', '100k+'] },
+        ]},
+      ],
+    };
+
+    // Icons as inline SVG
+    const IconChart = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
+    const IconUsers = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 12H9m4.646-4.646l2.828 2.828M9.172 9.172L6.344 6.344" /></svg>;
+    const IconFile = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
+    const IconPalette = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a6 6 0 016 6v10a2 2 0 01-2 2z" /></svg>;
+    const IconLogout = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+    const IconArrowRight = () => <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>;
+    const IconCheck = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
+    const IconPlus = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>;
+    const IconCopy = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
+
+    // Tour Guide Component
+    const TourGuide = ({ step, totalSteps, title, instruction, onNext, onClose, highlightRef, position = 'bottom-right' }) => {
+      if (!step) return null;
+      return (
+        <div className={`fixed ${position === 'bottom-right' ? 'bottom-8 right-8' : 'bottom-8 left-8'} z-50 w-80 bg-white rounded-2xl shadow-2xl p-6 smooth-transition`}>
+          <div className="text-sm font-semibold text-gray-500 mb-2">Krok {step} z {totalSteps}</div>
+          <h3 className="text-lg font-bold text-gray-900 mb-3">{title}</h3>
+          <p className="text-gray-700 text-sm mb-6 leading-relaxed">{instruction}</p>
+          <div className="flex gap-3">
+            <button onClick={onNext} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg smooth-transition flex items-center justify-center gap-2">
+              Dalej <IconArrowRight />
+            </button>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xs font-semibold">Koniec</button>
+          </div>
+        </div>
+      );
+    };
+
+    // Scenario Selector
+    const ScenarioSelector = ({ onSelect }) => (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-8">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">Briefer</h1>
+          <p className="text-xl text-gray-600">Kompleksowy system do zarządzania briefami kreatywnych</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mb-12">
+          {/* Admin Card */}
+          <div onClick={() => onSelect('admin')} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 smooth-transition p-8 cursor-pointer border-2 border-transparent hover:border-purple-500">
+            <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">ADMIN (Master)</h2>
+            <p className="text-gray-600 text-center mb-2 font-semibold">Reszek</p>
+            <p className="text-gray-500 text-center text-sm mb-6">Zarządzasz całym systemem, widzisz wszystko</p>
+            <button className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg smooth-transition flex items-center justify-center gap-2">
+              Rozpocznij <IconArrowRight />
+            </button>
+          </div>
+
+          {/* Agent Card */}
+          <div onClick={() => onSelect('agent')} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 smooth-transition p-8 cursor-pointer border-2 border-transparent hover:border-blue-500">
+            <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM4.318 20H2v-2a3 3 0 015.856-1.487" /></svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">AGENT</h2>
+            <p className="text-gray-600 text-center mb-2 font-semibold">Anna Kowalska</p>
+            <p className="text-gray-500 text-center text-sm mb-6">Tworzysz briefy dla klientów</p>
+            <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg smooth-transition flex items-center justify-center gap-2">
+              Rozpocznij <IconArrowRight />
+            </button>
+          </div>
+
+          {/* Client Card */}
+          <div onClick={() => onSelect('client')} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 smooth-transition p-8 cursor-pointer border-2 border-transparent hover:border-orange-500">
+            <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">KLIENT</h2>
+            <p className="text-gray-600 text-center mb-2 font-semibold">Zdrofit Sp. z o.o.</p>
+            <p className="text-gray-500 text-center text-sm mb-6">Wypełniasz brief bez logowania</p>
+            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg smooth-transition flex items-center justify-center gap-2">
+              Rozpocznij <IconArrowRight />
+            </button>
+          </div>
+        </div>
+
+        <p className="text-gray-500 text-sm text-center">Wybierz scenariusz żeby zobaczyć jak działa Briefer</p>
+      </div>
+    );
+
+    // Admin Dashboard
+    const AdminDashboard = ({ onNavigate, currentPage, onTourStep, tourStep, tourComplete }) => {
+      const [showAddAgent, setShowAddAgent] = useState(false);
+      const [newAgent, setNewAgent] = useState({ name: '', email: '' });
+      const [briefDetail, setBriefDetail] = useState(null);
+
+      const tours = {
+        dashboard: [
+          { title: 'Panel admina', instruction: 'Witaj w panelu admina. Widzisz statystyki wszystkich briefów i agentów.' },
+          { title: 'Menu nawigacji', instruction: 'Kliknij "Agenci" w menu żeby zobaczyć swoich agentów.' },
+          { title: 'Lista agentów', instruction: 'Tu widzisz wszystkich agentów, ich statusy i liczbę briefów. Kliknij "Dodaj agenta".' },
+          { title: 'Dodaj agenta', instruction: 'Wypełnij formularz i kliknij "Utwórz". Agent dostanie konto.' },
+          { title: 'Wszystkie briefy', instruction: 'Wróć do "Briefy" — widzisz briefy WSZYSTKICH agentów.' },
+          { title: 'Szczegóły briefu', instruction: 'Kliknij na brief żeby zobaczyć szczegóły i postęp.' },
+          { title: 'Postęp klienta', instruction: 'Widzisz postęp klienta, link do udostępnienia i historię.' },
+          { title: 'Brandingi', instruction: 'Przejdź do "Brandingi" — widzisz profile brandingowe wszystkich agentów.' },
+        ]
+      };
+
+      const currentTour = tours[currentPage] || [];
+
+      useEffect(() => {
+        if (tourStep > 0 && tourStep <= currentTour.length) {
+          onTourStep(tourStep, currentTour[tourStep - 1], currentTour.length);
+        }
+      }, [tourStep, currentPage, currentTour, onTourStep]);
+
+      if (currentPage === 'dashboard') {
+        return (
+          <div className="flex-1 p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Panel administracyjny</h1>
+            <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">Wszystkie briefy</div>
+                <div className="text-4xl font-bold text-gray-900">{MOCK.allBriefs.length}</div>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">Aktywne</div>
+                <div className="text-4xl font-bold text-amber-600">{MOCK.allBriefs.filter(b => b.status === 'in_progress').length}</div>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">Ukończone</div>
+                <div className="text-4xl font-bold text-green-600">{MOCK.allBriefs.filter(b => b.status === 'completed').length}</div>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">Agenci</div>
+                <div className="text-4xl font-bold text-blue-600">{MOCK.agents.length}</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (currentPage === 'agents') {
+        return (
+          <div className="flex-1 p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Agenci</h1>
+              <button onClick={() => setShowAddAgent(true)} className={`${tourStep === 3 ? 'highlight-pulse' : ''} bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg smooth-transition flex items-center gap-2`}>
+                <IconPlus /> Dodaj agenta
+              </button>
+            </div>
+            <div className="bg-white rounded-xl shadow overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Imię i nazwisko</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Briefy</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Brandingi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {MOCK.agents.map(agent => (
+                    <tr key={agent.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">{agent.full_name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{agent.email}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${agent.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {agent.is_active ? 'Aktywny' : 'Nieaktywny'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{agent.briefs}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{agent.brands}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {showAddAgent && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
+                <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Dodaj nowego agenta</h2>
+                  <input
+                    type="text"
+                    placeholder="Imię i nazwisko"
+                    value={newAgent.name}
+                    onChange={(e) => setNewAgent({...newAgent, name: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={newAgent.email}
+                    onChange={(e) => setNewAgent({...newAgent, email: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="flex gap-3">
+                    <button onClick={() => { setShowAddAgent(false); onTourStep(tourStep + 1); }} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg smooth-transition">
+                      Utwórz
+                    </button>
+                    <button onClick={() => setShowAddAgent(false)} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold py-2 rounded-lg smooth-transition">
+                      Anuluj
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      if (currentPage === 'briefs') {
+        return (
+          <div className="flex-1 p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Wszystkie briefy</h1>
+            <div className="grid gap-4">
+              {MOCK.allBriefs.map(brief => (
+                <div
+                  key={brief.id}
+                  onClick={() => { setBriefDetail(brief); onTourStep(tourStep + 1); }}
+                  className={`${tourStep === 5 && !briefDetail ? 'highlight-pulse' : ''} bg-white rounded-xl shadow hover:shadow-lg p-6 cursor-pointer smooth-transition border-l-4`}
+                  style={{ borderColor: brief.brandColor }}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{brief.title}</h3>
+                      <p className="text-sm text-gray-600 mt-1">Klient: {brief.client} | Agent: {brief.agent}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      brief.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      brief.status === 'in_progress' ? 'bg-amber-100 text-amber-800' :
+                      brief.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {brief.status === 'completed' ? 'Ukończony' : brief.status === 'in_progress' ? 'W trakcie' : brief.status === 'sent' ? 'Wysłany' : 'Draft'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{brief.progress}% ukończony</span>
+                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${brief.progress}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {briefDetail && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
+                <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-80 overflow-y-auto">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{briefDetail.title}</h2>
+                  <div className="space-y-3 text-gray-700">
+                    <p><strong>Klient:</strong> {briefDetail.client}</p>
+                    <p><strong>Agent:</strong> {briefDetail.agent}</p>
+                    <p><strong>Status:</strong> {briefDetail.status}</p>
+                    <p><strong>Postęp:</strong> {briefDetail.progress}%</p>
+                    <p><strong>Link dla klienta:</strong> <code className="bg-gray-100 px-2 py-1 rounded text-xs">briefer.app/brief/{briefDetail.token}</code></p>
+                  </div>
+                  <button onClick={() => { setBriefDetail(null); onTourStep(tourStep + 1); }} className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg smooth-transition">
+                    Zamknij
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      if (currentPage === 'brands') {
+        return (
+          <div className="flex-1 p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Brandingi (wszystkie agenci)</h1>
+            {MOCK.agents.map(agent => {
+              const agentBrands = MOCK.brands.filter(b => b.owner_id === agent.id);
+              return (
+                <div key={agent.id} className="mb-10">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">{agent.full_name}</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {agentBrands.map(brand => (
+                      <div key={brand.id} className="bg-white rounded-xl shadow p-6 text-center">
+                        <div className="w-12 h-12 rounded-lg mx-auto mb-3" style={{ backgroundColor: brand.color }}></div>
+                        <h3 className="font-bold text-gray-900">{brand.name}</h3>
+                        <p className="text-xs text-gray-600 mt-2">{brand.tone}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      return null;
+    };
+
+    // Agent Dashboard
+    const AgentDashboard = ({ onNavigate, currentPage, onTourStep, tourStep }) => {
+      const [showNewBrief, setShowNewBrief] = useState(false);
+      const [briefStep, setBriefStep] = useState(0);
+      const [briefData, setBriefData] = useState({ brand: '', client: '', title: '', email: '' });
+      const [generatedLink, setGeneratedLink] = useState('');
+
+      const tours = {
+        dashboard: [
+          { title: 'Panel agenta', instruction: 'Witaj w panelu agenta. Widzisz TYLKO swoje briefy.' },
+          { title: 'Nowy brief', instruction: 'Stwórzmy nowy brief. Kliknij "Nowy brief".' },
+          { title: 'Wybór brandingu', instruction: 'Wybierz profil brandingowy. Klient zobaczy ten branding.' },
+          { title: 'Dane briefu', instruction: 'Wpisz dane klienta i tytuł briefu.' },
+          { title: 'Potwierdzenie', instruction: 'Potwierdź i wygeneruj link dla klienta.' },
+          { title: 'Link gotowy', instruction: 'Link gotowy! Skopiuj go i wyślij klientowi.' },
+          { title: 'Moje briefy', instruction: 'Wróć do "Moje briefy" — widzisz status wypełniania.' },
+          { title: 'Moje brandingi', instruction: 'Zarządzaj swoimi brandingami w "Moje brandingi".' },
+        ]
+      };
+
+      const currentTour = tours[currentPage] || [];
+      const agentBriefs = MOCK.allBriefs.filter(b => b.agent_id === '2');
+      const agentBrands = MOCK.brands.filter(b => b.owner_id === '2');
+
+      useEffect(() => {
+        if (tourStep > 0 && tourStep <= currentTour.length) {
+          onTourStep(tourStep, currentTour[tourStep - 1], currentTour.length);
+        }
+      }, [tourStep, currentPage, currentTour, onTourStep]);
+
+      if (currentPage === 'dashboard') {
+        return (
+          <div className="flex-1 p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Moja strona główna</h1>
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">Wszystkie briefy</div>
+                <div className="text-4xl font-bold text-gray-900">{agentBriefs.length}</div>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">W trakcie</div>
+                <div className="text-4xl font-bold text-amber-600">{agentBriefs.filter(b => b.status === 'in_progress').length}</div>
+              </div>
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="text-gray-600 text-sm mb-2">Ukończone</div>
+                <div className="text-4xl font-bold text-green-600">{agentBriefs.filter(b => b.status === 'completed').length}</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (currentPage === 'briefs') {
+        return (
+          <div className="flex-1 p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Moje briefy</h1>
+              <button onClick={() => { setShowNewBrief(true); onTourStep(tourStep + 1); }} className={`${tourStep === 2 ? 'highlight-pulse' : ''} bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg smooth-transition flex items-center gap-2`}>
+                <IconPlus /> Nowy brief
+              </button>
+            </div>
+            <div className="grid gap-4">
+              {agentBriefs.map(brief => (
+                <div key={brief.id} className="bg-white rounded-xl shadow hover:shadow-lg p-6 smooth-transition border-l-4" style={{ borderColor: brief.brandColor }}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{brief.title}</h3>
+                      <p className="text-sm text-gray-600 mt-1">Klient: {brief.client}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      brief.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      brief.status === 'in_progress' ? 'bg-amber-100 text-amber-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {brief.status === 'completed' ? 'Ukończony' : brief.status === 'in_progress' ? 'W trakcie' : 'Wysłany'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{brief.progress}% wypełniony</span>
+                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${brief.progress}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {showNewBrief && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
+                <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+                  {briefStep === 0 && (
+                    <>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6">Wybierz branding</h2>
+                      <div className={`grid grid-cols-2 gap-4 mb-6`}>
+                        {agentBrands.map(brand => (
+                          <button
+                            key={brand.id}
+                            onClick={() => { setBriefData({...briefData, brand: brand.name}); setBriefStep(1); onTourStep(tourStep + 1); }}
+                            className={`p-4 rounded-lg border-2 smooth-transition text-center ${briefData.brand === brand.name ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                          >
+                            <div className="w-8 h-8 rounded mx-auto mb-2" style={{ backgroundColor: brand.color }}></div>
+                            <p className="text-sm font-semibold text-gray-900">{brand.name}</p>
+                          </button>
+                        ))}
+                      </div>
+                      <button onClick={() => setShowNewBrief(false)} className="w-full bg-gray-200 text-gray-900 font-semibold py-2 rounded-lg">Anuluj</button>
+                    </>
+                  )}
+                  {briefStep === 1 && (
+                    <>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6">Dane briefu</h2>
+                      <input type="text" placeholder="Nazwa klienta" value={briefData.client} onChange={(e) => setBriefData({...briefData, client: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <input type="email" placeholder="Email klienta" value={briefData.email} onChange={(e) => setBriefData({...briefData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <input type="text" placeholder="Tytuł briefu" value={briefData.title} onChange={(e) => setBriefData({...briefData, title: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <div className="flex gap-3">
+                        <button onClick={() => { setBriefStep(2); setGeneratedLink(`briefer.app/brief/${Math.random().toString(36).substr(2, 9)}`); onTourStep(tourStep + 1); }} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg">Dalej</button>
+                        <button onClick={() => setBriefStep(0)} className="flex-1 bg-gray-200 text-gray-900 font-semibold py-2 rounded-lg">Wstecz</button>
+                      </div>
+                    </>
+                  )}
+                  {briefStep === 2 && (
+                    <>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6">Link gotowy!</h2>
+                      <p className="text-gray-700 mb-4">Skopiuj link i wyślij klientowi:</p>
+                      <div className="bg-gray-100 rounded-lg px-4 py-3 mb-6 flex justify-between items-center">
+                        <code className="text-sm text-gray-900 break-all">{generatedLink}</code>
+                        <button onClick={() => { navigator.clipboard.writeText(generatedLink); onTourStep(tourStep + 1); }} className="ml-2 text-blue-500 hover:text-blue-600"><IconCopy /></button>
+                      </div>
+                      <button onClick={() => { setShowNewBrief(false); setBriefStep(0); onTourStep(tourStep + 1); }} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg">Gotowe</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      if (currentPage === 'brands') {
+        return (
+          <div className="flex-1 p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Moje brandingi</h1>
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4`}>
+              {agentBrands.map(brand => (
+                <div key={brand.id} className="bg-white rounded-xl shadow p-6 text-center">
+                  <div className="w-12 h-12 rounded-lg mx-auto mb-3" style={{ backgroundColor: brand.color }}></div>
+                  <h3 className="font-bold text-gray-900">{brand.name}</h3>
+                  <p className="text-xs text-gray-600 mt-2">{brand.tone}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    };
+
+    // Client Wizard
+    const ClientWizard = ({ onTourStep, tourStep }) => {
+      const [currentStep, setCurrentStep] = useState(0);
+      const [completed, setCompleted] = useState(false);
+      const [formData, setFormData] = useState({});
+
+      const brandColor = '#FF6B35';
+      const tours = [
+        { title: 'Witaj!', instruction: 'Klient otrzymał link od agenta. Otwiera go bez logowania.' },
+        { title: 'Zacznij brief', instruction: 'Klika "Zacznij" i wypełnia brief krok po kroku.' },
+        { title: 'Wypełnianie formularza', instruction: 'Wypełnia informacje o projekcie. Postęp zapisuje się automatycznie.' },
+        { title: 'Kolejne kroki', instruction: 'Przechodzi przez kolejne kroki — widzi ile jeszcze zostało.' },
+        { title: 'Wysłanie briefu', instruction: 'Na końcu klika "Wyślij" — brief trafia do agenta.' },
+        { title: 'Dziękujemy!', instruction: 'Gotowe! Klient widzi podziękowanie z podpisem agenta.' },
+      ];
+
+      useEffect(() => {
+        if (tourStep > 0 && tourStep <= tours.length) {
+          onTourStep(tourStep, tours[tourStep - 1], tours.length);
+        }
+      }, [tourStep, onTourStep]);
+
+      if (!currentStep && !completed) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: brandColor }}>
+            <div className="bg-white rounded-2xl shadow-2xl p-12 max-w-2xl text-center">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">FitStudio Pro</h1>
+              <p className="text-gray-600 text-lg mb-8">Czekamy na Twoje pomysły</p>
+              <p className="text-gray-700 mb-8">Agent przygotował briefing dla Twojego projektu. Wypełnij krótki formularz — to zajmie Ci zaledwie kilka minut!</p>
+              <button onClick={() => { setCurrentStep(1); onTourStep(2); }} className="bg-white text-gray-900 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 smooth-transition text-lg">
+                Zacznij <IconArrowRight />
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (completed) {
+        return (
+          <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: brandColor }}>
+            <div className="bg-white rounded-2xl shadow-2xl p-12 max-w-2xl text-center">
+              <div className="text-6xl mb-4 flex justify-center"><IconCheck className="text-green-600" /></div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Dziękujemy!</h1>
+              <p className="text-gray-700 mb-8">Twój brief został wysłany do agenta. Skontaktujemy się z Tobą wkrótce.</p>
+              <p className="text-gray-600 text-sm">Anna Kowalska<br />Studio Kreatywne</p>
+            </div>
+          </div>
+        );
+      }
+
+      const step = MOCK.wizardSteps[currentStep - 1];
+      const progress = ((currentStep) / MOCK.wizardSteps.length) * 100;
+
+      return (
+        <div className="min-h-screen p-8" style={{ backgroundColor: '#f5f5f7' }}>
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{step.title}</h1>
+                <span className="text-gray-600 text-sm">Krok {currentStep} z {MOCK.wizardSteps.length}</span>
+              </div>
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full smooth-transition" style={{ width: `${progress}%`, backgroundColor: brandColor }}></div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow p-8 mb-8">
+              <p className="text-gray-600 mb-6">{step.desc}</p>
+              <div className="space-y-4">
+                {step.fields.map(field => (
+                  <div key={field.key}>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">{field.label}</label>
+                    {field.type === 'text' && <input type="text" placeholder={field.placeholder} onChange={(e) => setFormData({...formData, [field.key]: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />}
+                    {field.type === 'textarea' && <textarea placeholder={field.placeholder} onChange={(e) => setFormData({...formData, [field.key]: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>}
+                    {field.type === 'select' && (
+                      <select onChange={(e) => setFormData({...formData, [field.key]: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Wybierz...</option>
+                        {field.options.map(opt => <option key={opt}>{opt}</option>)}
+                      </select>
+                    )}
+                    {field.type === 'radio' && (
+                      <div className="flex gap-4">
+                        {field.options.map(opt => (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name={field.key} value={opt} onChange={(e) => setFormData({...formData, [field.key]: e.target.value})} />
+                            <span className="text-gray-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {field.type === 'checkbox' && (
+                      <div className="space-y-2">
+                        {field.options.map(opt => (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" onChange={(e) => {
+                              const current = formData[field.key] || [];
+                              setFormData({...formData, [field.key]: e.target.checked ? [...current, opt] : current.filter(x => x !== opt)});
+                            }} />
+                            <span className="text-gray-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                disabled={currentStep === 1}
+                onClick={() => { setCurrentStep(Math.max(1, currentStep - 1)); onTourStep(tourStep - 1); }}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-900 font-semibold py-3 rounded-lg smooth-transition"
+              >
+                Wstecz
+              </button>
+              {currentStep < MOCK.wizardSteps.length ? (
+                <button
+                  onClick={() => { setCurrentStep(currentStep + 1); if (currentStep === 2) onTourStep(tourStep + 1); }}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg smooth-transition"
+                >
+                  Dalej
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setCompleted(true); onTourStep(tourStep + 1); }}
+                  className={`${tourStep === 5 ? 'highlight-pulse' : ''} flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg smooth-transition`}
+                >
+                  Wyślij brief
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Main App Component
+    const App = () => {
+      const [scenario, setScenario] = useState(null);
+      const [currentPage, setCurrentPage] = useState('dashboard');
+      const [tourStep, setTourStep] = useState(1);
+      const [tourInfo, setTourInfo] = useState(null);
+      const [tourComplete, setTourComplete] = useState(false);
+
+      const handleTourStep = (step, tourData, total) => {
+        setTourStep(step);
+        setTourInfo(tourData);
+      };
+
+      const handleNextTour = () => {
+        if (tourInfo) {
+          setTourStep(tourStep + 1);
+        }
+      };
+
+      const handleCloseTour = () => {
+        setTourComplete(true);
+      };
+
+      if (!scenario) {
+        return <ScenarioSelector onSelect={(s) => { setScenario(s); setTourStep(1); setTourComplete(false); }} />;
+      }
+
+      if (scenario === 'admin') {
+        return (
+          <div className="flex min-h-screen bg-gray-50">
+            {/* Sidebar */}
+            <div className="w-64 bg-white shadow-lg p-6 flex flex-col">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">Briefer</h2>
+              <nav className="space-y-2 flex-1">
+                {[
+                  { id: 'dashboard', label: 'Panel', icon: <IconChart /> },
+                  { id: 'briefs', label: 'Briefy', icon: <IconFile /> },
+                  { id: 'agents', label: 'Agenci', icon: <IconUsers /> },
+                  { id: 'brands', label: 'Brandingi', icon: <IconPalette /> },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setCurrentPage(item.id); setTourStep(tourStep + (item.id === 'agents' ? 1 : 0)); }}
+                    className={`${tourStep === 2 && item.id === 'agents' ? 'highlight-pulse' : ''} w-full flex items-center gap-3 px-4 py-3 rounded-lg smooth-transition ${
+                      currentPage === item.id ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {item.icon} {item.label}
+                  </button>
+                ))}
+              </nav>
+              <button onClick={() => setScenario(null)} className="w-full flex items-center justify-center gap-2 text-gray-700 hover:text-gray-900 text-sm py-2">
+                <IconLogout /> Wyloguj
+              </button>
+            </div>
+
+            {/* Main Content */}
+            <AdminDashboard onNavigate={setCurrentPage} currentPage={currentPage} onTourStep={handleTourStep} tourStep={tourStep} tourComplete={tourComplete} />
+
+            {/* Tour Guide */}
+            {!tourComplete && tourInfo && <TourGuide step={tourStep} totalSteps={8} title={tourInfo.title} instruction={tourInfo.instruction} onNext={handleNextTour} onClose={handleCloseTour} />}
+          </div>
+        );
+      }
+
+      if (scenario === 'agent') {
+        return (
+          <div className="flex min-h-screen bg-gray-50">
+            {/* Sidebar */}
+            <div className="w-64 bg-white shadow-lg p-6 flex flex-col">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">Briefer</h2>
+              <nav className="space-y-2 flex-1">
+                {[
+                  { id: 'dashboard', label: 'Panel', icon: <IconChart /> },
+                  { id: 'briefs', label: 'Moje briefy', icon: <IconFile /> },
+                  { id: 'brands', label: 'Moje brandingi', icon: <IconPalette /> },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setCurrentPage(item.id); if (item.id === 'briefs') setTourStep(6); if (item.id === 'brands') setTourStep(8); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg smooth-transition text-gray-700 hover:bg-gray-100"
+                  >
+                    {item.icon} {item.label}
+                  </button>
+                ))}
+              </nav>
+              <button onClick={() => setScenario(null)} className="w-full flex items-center justify-center gap-2 text-gray-700 hover:text-gray-900 text-sm py-2">
+                <IconLogout /> Wyloguj
+              </button>
+            </div>
+
+            {/* Main Content */}
+            <AgentDashboard onNavigate={setCurrentPage} currentPage={currentPage} onTourStep={handleTourStep} tourStep={tourStep} />
+
+            {/* Tour Guide */}
+            {!tourComplete && tourInfo && <TourGuide step={tourStep} totalSteps={8} title={tourInfo.title} instruction={tourInfo.instruction} onNext={handleNextTour} onClose={handleCloseTour} />}
+          </div>
+        );
+      }
+
+      if (scenario === 'client') {
+        return (
+          <>
+            <ClientWizard onTourStep={handleTourStep} tourStep={tourStep} />
+            {!tourComplete && tourInfo && <TourGuide step={tourStep} totalSteps={6} title={tourInfo.title} instruction={tourInfo.instruction} onNext={handleNextTour} onClose={handleCloseTour} position="bottom-left" />}
+          </>
+        );
+      }
+
+      return null;
+    };
+
+    // Render App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
