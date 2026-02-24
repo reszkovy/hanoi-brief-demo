@@ -19,9 +19,7 @@ export async function GET(
     .select(
       `id, title, status, lang, agent_id, brand_profile_id, client_name,
        client_email, client_company, public_token, token_expires_at, sent_at,
-       started_at, completed_at, wizard_data, scope, created_at, updated_at,
-       brand_profile:brand_profile_id (id, name_pl, name_en, logo_url, accent_color,
-         footer_signature_pl, footer_signature_en, disclaimer_pl, disclaimer_en)`
+       started_at, completed_at, wizard_data, scope, created_at, updated_at`
     )
     .eq('public_token', params.token)
     .single()
