@@ -40,7 +40,7 @@ export async function GET(
   const { data: brief, error: queryError } = await supabase
     .from('briefs')
     .select(
-      `id, title, status, lang, agent_id, brand_profile_id, client_name,
+      `id, title, status, lang, scope, agent_id, brand_profile_id, client_name,
        client_email, client_company, public_token, token_expires_at, sent_at,
        started_at, completed_at, wizard_data, created_at, updated_at`
     )
@@ -117,7 +117,7 @@ export async function PATCH(
     .update(updateData)
     .eq('id', params.id)
     .select(
-      `id, title, status, lang, agent_id, brand_profile_id, client_name,
+      `id, title, status, lang, scope, agent_id, brand_profile_id, client_name,
        client_email, client_company, public_token, token_expires_at, sent_at,
        started_at, completed_at, wizard_data, created_at, updated_at`
     )
