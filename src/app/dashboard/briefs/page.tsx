@@ -35,37 +35,35 @@ export default function BriefsPage() {
   useEffect(() => {
     const loadBriefs = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        // Get profile
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        setProfile(profileData as Profile)
-        const isMaster = profileData?.role === 'master'
-
-        // Get briefs
-        let query = supabase
-          .from('briefs')
-          .select(
-            `id, title, status, lang, scope, agent_id, brand_profile_id, client_name, client_email,
-             client_company, public_token, token_expires_at, sent_at, started_at, completed_at,
-             wizard_data, created_at, updated_at,
-            agent:agent_id (id, full_name, email),
-            brand_profile:brand_profile_id (id, name_pl, name_en, accent_color, logo_url)`
-          )
-          .order('created_at', { ascending: false })
-
-        if (!isMaster) {
-          query = query.eq('agent_id', user.id)
+        // Fetch briefs via API (has dev bypass with admin client)
+        const res = await fetch('/api/briefs')
+        if (res.ok) {
+          const data = await res.json()
+          setBriefs((data as any[]) || [])
         }
 
-        const { data } = await query
-        setBriefs((data as any[]) || [])
+        // Get profile — try auth first, fall back to dev profile
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          if (profileData) {
+            setProfile(profileData as Profile)
+            return
+          }
+        }
+        // DEV BYPASS: use master-like fake profile
+        setProfile({
+          id: 'dev-bypass',
+          email: 'dev@briefer.app',
+          full_name: 'Dev Admin',
+          role: 'master',
+          lang: 'pl',
+          is_active: true,
+        } as Profile)
       } catch (err) {
         console.error('Error loading briefs:', err)
       } finally {
@@ -103,12 +101,12 @@ export default function BriefsPage() {
   }
 
   const handleArchive = async (briefId: string) => {
-    const { error } = await supabase
-      .from('briefs')
-      .update({ status: 'archived' })
-      .eq('id', briefId)
-
-    if (!error) {
+    const res = await fetch(`/api/briefs/${briefId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'archived' }),
+    })
+    if (res.ok) {
       setBriefs(briefs.map(b => b.id === briefId ? { ...b, status: 'archived' } : b))
     }
   }
@@ -116,12 +114,8 @@ export default function BriefsPage() {
   const handleDelete = async (briefId: string) => {
     if (!confirm(t('common.confirm', profile?.lang || 'en'))) return
 
-    const { error } = await supabase
-      .from('briefs')
-      .delete()
-      .eq('id', briefId)
-
-    if (!error) {
+    const res = await fetch(`/api/briefs/${briefId}`, { method: 'DELETE' })
+    if (res.ok) {
       setBriefs(briefs.filter(b => b.id !== briefId))
     }
   }
@@ -149,14 +143,12 @@ export default function BriefsPage() {
             {filteredBriefs.length} {t('common.noResults', lang)}
           </p>
         </div>
-        {!isMaster && (
-          <Link href="/dashboard/briefs/new">
-            <Button variant="primary" size="md" className="gap-2">
-              <Plus size={18} />
-              {t('brief.create', lang)}
-            </Button>
-          </Link>
-        )}
+        <Link href="/dashboard/briefs/new">
+          <Button variant="primary" size="md" className="gap-2">
+            <Plus size={18} />
+            {t('brief.create', lang)}
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}

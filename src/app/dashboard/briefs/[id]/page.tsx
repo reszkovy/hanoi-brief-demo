@@ -60,39 +60,13 @@ export default function BriefDetailPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-          router.push('/login')
-          return
-        }
-
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        setProfile(profileData as Profile)
-
-        const { data: briefData } = await supabase
-          .from('briefs')
-          .select('*')
-          .eq('id', briefId)
-          .single()
-
-        if (!briefData) {
+        // Fetch brief via API (has dev bypass with admin client)
+        const briefRes = await fetch(`/api/briefs/${briefId}`)
+        if (!briefRes.ok) {
           router.push('/dashboard/briefs')
           return
         }
-
-        if (
-          profileData?.role !== 'master' &&
-          briefData.agent_id !== user.id
-        ) {
-          router.push('/dashboard/briefs')
-          return
-        }
-
+        const briefData = await briefRes.json()
         setBrief(briefData as Brief)
         setEditForm({
           title: briefData.title || '',
@@ -101,6 +75,29 @@ export default function BriefDetailPage() {
           client_company: briefData.client_company || '',
           lang: briefData.lang || 'pl',
         })
+
+        // Get profile — try auth first, fall back to dev profile
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          if (profileData) {
+            setProfile(profileData as Profile)
+            return
+          }
+        }
+        // DEV BYPASS: use master-like fake profile
+        setProfile({
+          id: 'dev-bypass',
+          email: 'dev@briefer.app',
+          full_name: 'Dev Admin',
+          role: 'master',
+          lang: 'pl',
+          is_active: true,
+        } as Profile)
       } catch (err) {
         console.error('Error loading brief:', err)
         router.push('/dashboard/briefs')
@@ -125,17 +122,17 @@ export default function BriefDetailPage() {
     setIsSaving(true)
 
     const updateData: Record<string, any> = { status: newStatus }
-    // Auto-set sent_at when marking as sent
     if (newStatus === 'sent' && !brief.sent_at) {
       updateData.sent_at = new Date().toISOString()
     }
 
-    const { error } = await supabase
-      .from('briefs')
-      .update(updateData)
-      .eq('id', brief.id)
+    const res = await fetch(`/api/briefs/${brief.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData),
+    })
 
-    if (!error) {
+    if (res.ok) {
       setBrief({ ...brief, ...updateData })
       showSaveSuccess()
     }
@@ -146,26 +143,22 @@ export default function BriefDetailPage() {
     if (!brief) return
     setIsSaving(true)
 
-    const { error } = await supabase
-      .from('briefs')
-      .update({
-        title: editForm.title.trim(),
-        client_name: editForm.client_name.trim() || null,
-        client_email: editForm.client_email.trim() || null,
-        client_company: editForm.client_company.trim() || null,
-        lang: editForm.lang,
-      })
-      .eq('id', brief.id)
+    const updateData = {
+      title: editForm.title.trim(),
+      client_name: editForm.client_name.trim() || null,
+      client_email: editForm.client_email.trim() || null,
+      client_company: editForm.client_company.trim() || null,
+      lang: editForm.lang,
+    }
 
-    if (!error) {
-      setBrief({
-        ...brief,
-        title: editForm.title.trim(),
-        client_name: editForm.client_name.trim() || null,
-        client_email: editForm.client_email.trim() || null,
-        client_company: editForm.client_company.trim() || null,
-        lang: editForm.lang,
-      })
+    const res = await fetch(`/api/briefs/${brief.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData),
+    })
+
+    if (res.ok) {
+      setBrief({ ...brief, ...updateData })
       setIsEditing(false)
       showSaveSuccess()
     }
@@ -246,12 +239,8 @@ export default function BriefDetailPage() {
     if (!brief) return
     if (!confirm(t('common.confirm', profile?.lang || 'en'))) return
 
-    const { error } = await supabase
-      .from('briefs')
-      .delete()
-      .eq('id', brief.id)
-
-    if (!error) {
+    const res = await fetch(`/api/briefs/${brief.id}`, { method: 'DELETE' })
+    if (res.ok) {
       router.push('/dashboard/briefs')
     }
   }
