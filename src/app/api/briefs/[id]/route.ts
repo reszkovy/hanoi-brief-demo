@@ -16,6 +16,7 @@ const ALLOWED_PATCH_FIELDS = [
   'client_company',
   'status',
   'lang',
+  'scope',
   'wizard_data',
   'token_expires_at',
   'sent_at',
