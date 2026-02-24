@@ -27,9 +27,7 @@ export async function GET(request: NextRequest) {
     .select(
       `id, title, status, lang, scope, agent_id, brand_profile_id, client_name, client_email,
        client_company, public_token, token_expires_at, sent_at, started_at, completed_at,
-       wizard_data, created_at, updated_at,
-       agent:agent_id (id, full_name, email),
-       brand_profile:brand_profile_id (id, name_pl, name_en, accent_color, logo_url)`
+       wizard_data, created_at, updated_at`
     )
     .order('created_at', { ascending: false })
 
@@ -105,9 +103,7 @@ export async function POST(request: NextRequest) {
     .select(
       `id, title, status, lang, agent_id, brand_profile_id, client_name,
        client_email, client_company, public_token, token_expires_at, sent_at,
-       started_at, completed_at, created_at, updated_at,
-       agent:agent_id (id, full_name, email),
-       brand_profile:brand_profile_id (id, name_pl, name_en, accent_color, logo_url)`
+       started_at, completed_at, created_at, updated_at`
     )
     .single()
 

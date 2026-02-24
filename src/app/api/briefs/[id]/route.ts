@@ -41,9 +41,7 @@ export async function GET(
     .select(
       `id, title, status, lang, agent_id, brand_profile_id, client_name,
        client_email, client_company, public_token, token_expires_at, sent_at,
-       started_at, completed_at, wizard_data, created_at, updated_at,
-       agent:agent_id (id, full_name, email),
-       brand_profile:brand_profile_id (id, name_pl, name_en, accent_color, logo_url)`
+       started_at, completed_at, wizard_data, created_at, updated_at`
     )
     .eq('id', params.id)
     .single()
@@ -120,9 +118,7 @@ export async function PATCH(
     .select(
       `id, title, status, lang, agent_id, brand_profile_id, client_name,
        client_email, client_company, public_token, token_expires_at, sent_at,
-       started_at, completed_at, wizard_data, created_at, updated_at,
-       agent:agent_id (id, full_name, email),
-       brand_profile:brand_profile_id (id, name_pl, name_en, accent_color, logo_url)`
+       started_at, completed_at, wizard_data, created_at, updated_at`
     )
     .single()
 
