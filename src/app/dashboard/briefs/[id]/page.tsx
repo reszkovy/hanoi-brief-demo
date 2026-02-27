@@ -190,7 +190,6 @@ export default function BriefDetailPage() {
           client_name: brief.client_name,
           client_email: brief.client_email,
           client_company: brief.client_company,
-          brand_profile_id: brief.brand_profile_id,
           lang: brief.lang,
         }),
       })

@@ -125,7 +125,7 @@ export default function PublicBriefPage() {
   const [allData, setAllData] = useState<Record<string, any>>({})
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // saveTimerRef removed — no more debounced auto-save
 
   // Shorthand for dark mode
   const d = theme === 'dark'
@@ -206,10 +206,10 @@ export default function PublicBriefPage() {
     loadBrief()
   }, [token])
 
-  // ---- Auto-save with debounce ----
+  // ---- Save step data (called on Next/Submit only) ----
   const saveStepData = useCallback(
-    async (data: Record<string, any>, stepNum: number) => {
-      if (!brief) return
+    async (data: Record<string, any>, stepNum: number, isFinal: boolean = false): Promise<boolean> => {
+      if (!brief) return false
       // Skip API calls in demo mode
       if (token === 'demo') {
         setLastSaved(
@@ -218,31 +218,47 @@ export default function PublicBriefPage() {
             minute: '2-digit',
           })
         )
-        return
+        return true
       }
       setIsSaving(true)
       try {
         const step = activeSteps[stepNum]
-        if (!step) return
+        if (!step) { setIsSaving(false); return false }
+
+        console.log(`[Brief Save] Step ${stepNum} (${step.key}), isFinal=${isFinal}, keys:`, Object.keys(data).length)
+
+        const payload: Record<string, any> = {
+          step_number: stepNum,
+          step_key: step.key,
+          step_data: data,
+        }
+        if (isFinal) {
+          payload.is_final = true
+        }
+
         const response = await fetch(`/api/public/brief/${token}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            step_number: stepNum,
-            step_key: step.key,
-            step_data: data,
-          }),
+          body: JSON.stringify(payload),
         })
+
         if (response.ok) {
+          console.log(`[Brief Save] Success - step ${stepNum}`)
           setLastSaved(
             new Date().toLocaleTimeString(lang === 'pl' ? 'pl-PL' : 'en-US', {
               hour: '2-digit',
               minute: '2-digit',
             })
           )
+          return true
+        } else {
+          const errData = await response.json().catch(() => ({}))
+          console.error(`[Brief Save] Error - step ${stepNum}:`, response.status, errData)
+          return false
         }
       } catch (err) {
-        console.error('Auto-save error:', err)
+        console.error('[Brief Save] Network error:', err)
+        return false
       } finally {
         setIsSaving(false)
       }
@@ -250,22 +266,11 @@ export default function PublicBriefPage() {
     [brief, token, lang, activeSteps]
   )
 
-  const debouncedSave = useCallback(
-    (data: Record<string, any>, stepNum: number) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => saveStepData(data, stepNum), 2000)
-    },
-    [saveStepData]
-  )
-
   // ---- Handlers ----
+  // Field change ONLY updates local state — no auto-save
   const handleFieldChange = (fieldKey: string, value: any) => {
     if (validationErrors.length > 0) setValidationErrors([])
-    setAllData((prev) => {
-      const updated = { ...prev, [fieldKey]: value }
-      debouncedSave(updated, currentStep)
-      return updated
-    })
+    setAllData((prev) => ({ ...prev, [fieldKey]: value }))
   }
 
   const handleSelectScope = (scope: ProjectScope) => {
@@ -303,63 +308,34 @@ export default function PublicBriefPage() {
       }
     }
     setValidationErrors([])
-    await saveStepData(allData, currentStep)
-    if (currentStep < activeSteps.length - 1) {
+
+    // Save current step data
+    const isLastStep = currentStep >= activeSteps.length - 1
+    const saved = await saveStepData(allData, currentStep, isLastStep)
+
+    if (!saved) {
+      alert(lang === 'pl'
+        ? 'Nie udało się zapisać danych. Sprawdź połączenie i spróbuj ponownie.'
+        : 'Failed to save data. Check your connection and try again.')
+      return
+    }
+
+    if (isLastStep) {
+      // Final submission — mark as completed
+      setBrief((prev) => (prev ? { ...prev, status: 'completed' } : null))
+      setStatus('success')
+    } else {
       setCurrentStep(currentStep + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      await handleSubmitWizard()
     }
   }
 
   const handlePreviousStep = async () => {
-    await saveStepData(allData, currentStep)
+    // Save before going back (non-blocking — don't stop navigation on failure)
+    saveStepData(allData, currentStep)
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const handleSubmitWizard = async () => {
-    if (!brief) return
-    // Cancel any pending debounced save to avoid race condition
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = null
-    }
-    setIsSubmitting(true)
-    // Demo mode — just show success
-    if (token === 'demo') {
-      setBrief((prev) => (prev ? { ...prev, status: 'completed' } : null))
-      setStatus('success')
-      setIsSubmitting(false)
-      return
-    }
-    try {
-      const lastStep = activeSteps[activeSteps.length - 1]
-      const response = await fetch(`/api/public/brief/${token}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          step_number: activeSteps.length - 1,
-          step_key: lastStep.key,
-          step_data: allData,
-          is_final: true,
-        }),
-      })
-      if (response.ok) {
-        setBrief((prev) => (prev ? { ...prev, status: 'completed' } : null))
-        setStatus('success')
-      } else {
-        const errData = await response.json().catch(() => ({}))
-        console.error('Submit error:', response.status, errData)
-        alert(`${t('common.error', lang)}: ${errData.error || response.status}`)
-      }
-    } catch (err) {
-      console.error('Error submitting brief:', err)
-      alert(t('common.error', lang))
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
