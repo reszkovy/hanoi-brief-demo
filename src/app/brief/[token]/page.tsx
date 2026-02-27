@@ -1208,24 +1208,18 @@ export default function PublicBriefPage() {
 
           {/* Step indicators removed — using bubbles in top bar */}
 
-          {/* Scope chip */}
+          {/* Scope badge (read-only) */}
           {selectedScope && (
             <div className="flex justify-center mt-3">
-              <button
-                onClick={() => {
-                  setStatus('scope')
-                  setCurrentStep(0)
-                }}
-                className={`text-xs transition-colors flex items-center gap-1 ${
-                  d ? 'text-r-white-dim hover:text-r-lime' : 'text-gray-500 hover:text-gray-700'
+              <span
+                className={`text-xs flex items-center gap-1 ${
+                  d ? 'text-r-white-dim' : 'text-gray-500'
                 }`}
               >
                 {lang === 'pl'
                   ? scopeOptions.find((s) => s.value === selectedScope)?.label.pl
                   : scopeOptions.find((s) => s.value === selectedScope)?.label.en}
-                {' '}&middot;{' '}
-                {t('wizard.changeScope', lang)}
-              </button>
+              </span>
             </div>
           )}
         </div>
