@@ -124,8 +124,11 @@ export default function PublicBriefPage() {
   // All wizard data across all steps
   const [allData, setAllData] = useState<Record<string, any>>({})
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  // saveTimerRef removed — no more debounced auto-save
+  // Auto-save timer (debounced backup — saves every 3s when data changes)
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const dataChangedRef = useRef(false)
 
   // Shorthand for dark mode
   const d = theme === 'dark'
@@ -266,15 +269,68 @@ export default function PublicBriefPage() {
     [brief, token, lang, activeSteps]
   )
 
+  // ---- Auto-save effect (debounced backup, every 3s) ----
+  useEffect(() => {
+    // Only auto-save when in wizard mode and data has changed
+    if (status !== 'wizard' || token === 'demo' || !brief) return
+    if (!dataChangedRef.current) return
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+
+    saveTimerRef.current = setTimeout(async () => {
+      const step = activeSteps[currentStep]
+      if (!step) return
+
+      console.log('[Auto-Save] Triggering for step', currentStep, step.key)
+      const saved = await saveStepData(allData, currentStep, false)
+      if (saved) {
+        dataChangedRef.current = false
+        setSaveError(null)
+        console.log('[Auto-Save] Success')
+      } else {
+        setSaveError(lang === 'pl' ? 'Zapis nie powiódł się' : 'Save failed')
+        console.error('[Auto-Save] Failed')
+      }
+    }, 3000)
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [allData, status, brief, token, currentStep, activeSteps, saveStepData, lang])
+
+  // ---- Save on page unload (best-effort) ----
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (status !== 'wizard' || token === 'demo' || !brief || !dataChangedRef.current) return
+      const step = activeSteps[currentStep]
+      if (!step) return
+
+      // Use sendBeacon for best-effort save on page close
+      const payload = JSON.stringify({
+        step_number: currentStep,
+        step_key: step.key,
+        step_data: allData,
+      })
+      navigator.sendBeacon(`/api/public/brief/${token}`, new Blob([payload], { type: 'application/json' }))
+      console.log('[Beacon Save] Sent on page unload')
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [status, token, brief, currentStep, activeSteps, allData])
+
   // ---- Handlers ----
-  // Field change ONLY updates local state — no auto-save
+  // Field change updates local state AND marks data as changed for auto-save
   const handleFieldChange = (fieldKey: string, value: any) => {
     if (validationErrors.length > 0) setValidationErrors([])
+    setSaveError(null)
+    dataChangedRef.current = true
     setAllData((prev) => ({ ...prev, [fieldKey]: value }))
   }
 
   const handleSelectScope = (scope: ProjectScope) => {
     setSelectedScope(scope)
+    dataChangedRef.current = true
     setAllData((prev) => ({ ...prev, _scope: scope, brief_type: scope }))
   }
 
@@ -282,8 +338,35 @@ export default function PublicBriefPage() {
     setStatus('scope')
   }
 
-  const handleScopeConfirm = () => {
+  const handleScopeConfirm = async () => {
     if (!selectedScope) return
+    // Save scope immediately when confirmed
+    const scopeData = { ...allData, _scope: selectedScope, brief_type: selectedScope }
+    if (token !== 'demo' && brief) {
+      const steps = getStepsForScope(selectedScope)
+      if (steps.length > 0) {
+        console.log('[Brief Save] Saving scope selection:', selectedScope)
+        try {
+          const response = await fetch(`/api/public/brief/${token}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              step_number: 0,
+              step_key: steps[0].key,
+              step_data: scopeData,
+            }),
+          })
+          if (response.ok) {
+            console.log('[Brief Save] Scope saved successfully')
+            dataChangedRef.current = false
+          } else {
+            console.error('[Brief Save] Scope save failed:', response.status)
+          }
+        } catch (err) {
+          console.error('[Brief Save] Scope save error:', err)
+        }
+      }
+    }
     setCurrentStep(0)
     setStatus('wizard')
   }
@@ -314,11 +397,18 @@ export default function PublicBriefPage() {
     const saved = await saveStepData(allData, currentStep, isLastStep)
 
     if (!saved) {
+      setSaveError(lang === 'pl'
+        ? 'Nie udało się zapisać. Sprawdź połączenie.'
+        : 'Failed to save. Check your connection.')
       alert(lang === 'pl'
         ? 'Nie udało się zapisać danych. Sprawdź połączenie i spróbuj ponownie.'
         : 'Failed to save data. Check your connection and try again.')
       return
     }
+
+    // Explicit save succeeded — reset auto-save flag
+    dataChangedRef.current = false
+    setSaveError(null)
 
     if (isLastStep) {
       // Final submission — mark as completed
@@ -918,7 +1008,13 @@ export default function PublicBriefPage() {
                       {t('wizard.saving', lang)}
                     </span>
                   )}
-                  {!isSaving && lastSaved && (
+                  {!isSaving && saveError && (
+                    <span className="flex items-center gap-1.5 text-xs text-red-400">
+                      <X size={12} />
+                      {saveError}
+                    </span>
+                  )}
+                  {!isSaving && !saveError && lastSaved && (
                     <span className="flex items-center gap-1.5 text-xs text-r-success">
                       <CheckCircle size={12} />
                       {lastSaved}
@@ -1069,6 +1165,24 @@ export default function PublicBriefPage() {
                     {t('wizard.previous', lang)}
                   </button>
                 )}
+                <button
+                  onClick={async () => {
+                    const saved = await saveStepData(allData, currentStep, false)
+                    if (saved) {
+                      dataChangedRef.current = false
+                      setSaveError(null)
+                    } else {
+                      setSaveError(lang === 'pl' ? 'Zapis nie powiódł się' : 'Save failed')
+                    }
+                  }}
+                  disabled={isSaving}
+                  className={`inline-flex items-center justify-center gap-2 rounded-full font-medium px-4 py-2.5 text-sm h-10 transition-all duration-200 border ${
+                    d ? 'bg-r-bg-card text-white border-r-border-strong hover:bg-r-bg-input' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                  title={lang === 'pl' ? 'Zapisz teraz' : 'Save now'}
+                >
+                  <Save size={16} />
+                </button>
                 <button
                   onClick={handleNextStep}
                   disabled={isSubmitting}
