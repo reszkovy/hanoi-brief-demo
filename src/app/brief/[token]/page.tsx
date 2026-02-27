@@ -775,7 +775,7 @@ export default function PublicBriefPage() {
     )
   }
 
-  if (status === 'success' || brief?.status === 'completed') {
+  if (status === 'success') {
     return (
       <div className={`min-h-screen flex items-center justify-center p-4 ${cls.bg}`}>
         <div className={`max-w-md w-full animate-scale-in rounded-md-lg border ${cls.bgCard} ${cls.cardShadow}`}>
