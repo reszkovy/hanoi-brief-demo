@@ -179,8 +179,20 @@ export default function PublicBriefPage() {
 
         const briefData = await response.json()
 
+        // Load brand profile for completed briefs too
+        if (briefData.brand_profile) {
+          setBrand(briefData.brand_profile)
+        }
+
         if (briefData.status === 'completed') {
           setBrief(briefData)
+          // Load existing data so edit mode can restore them
+          if (briefData.wizard_data && typeof briefData.wizard_data === 'object') {
+            setAllData(briefData.wizard_data)
+            if (briefData.wizard_data._scope) {
+              setSelectedScope(briefData.wizard_data._scope)
+            }
+          }
           setStatus('success')
           return
         }
@@ -774,20 +786,10 @@ export default function PublicBriefPage() {
             <h1 className={`text-2xl font-semibold mb-3 ${cls.text}`}>{t('wizard.thankyou', lang)}</h1>
             <p className={`leading-relaxed ${cls.textDim}`}>{t('wizard.thankyouMessage', lang)}</p>
             <button
-              onClick={async () => {
-                try {
-                  const res = await fetch('/api/public/briefs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lang }),
-                  })
-                  const data = await res.json()
-                  if (data.public_token) {
-                    window.location.href = `/brief/${data.public_token}`
-                  }
-                } catch {
-                  alert(t('common.error', lang))
-                }
+              onClick={() => {
+                // Enter edit mode — go directly to wizard with existing data
+                setCurrentStep(0)
+                setStatus('wizard')
               }}
               className="inline-block mt-6 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-[1.02] cursor-pointer"
               style={{
@@ -795,7 +797,7 @@ export default function PublicBriefPage() {
                 color: '#151515',
               }}
             >
-              {t('wizard.fillAnother', lang)}
+              {lang === 'pl' ? 'Edytuj brief' : 'Edit brief'}
             </button>
             {brand && (
               <div className={`mt-8 pt-6 border-t ${cls.border}`}>
@@ -1141,20 +1143,8 @@ export default function PublicBriefPage() {
 
               {/* Navigation */}
               <div className={`flex gap-3 pt-8 mt-8 border-t ${cls.border}`}>
-                {currentStep === 0 ? (
-                  <button
-                    onClick={() => {
-                      setStatus('scope')
-                      setCurrentStep(0)
-                    }}
-                    className={`inline-flex items-center justify-center gap-2 rounded-full font-medium px-5 py-2.5 text-sm h-10 transition-all duration-200 border ${
-                      d ? 'bg-r-bg-card text-white border-r-border-strong hover:bg-r-bg-input' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <ChevronLeft size={16} />
-                    {t('wizard.changeScope', lang)}
-                  </button>
-                ) : (
+                {/* Back button — hidden on first step */}
+                {currentStep > 0 && (
                   <button
                     onClick={handlePreviousStep}
                     className={`inline-flex items-center justify-center gap-2 rounded-full font-medium px-5 py-2.5 text-sm h-10 transition-all duration-200 border ${
@@ -1165,6 +1155,7 @@ export default function PublicBriefPage() {
                     {t('wizard.previous', lang)}
                   </button>
                 )}
+                {/* Manual save button */}
                 <button
                   onClick={async () => {
                     const saved = await saveStepData(allData, currentStep, false)
@@ -1183,22 +1174,34 @@ export default function PublicBriefPage() {
                 >
                   <Save size={16} />
                 </button>
-                <button
-                  onClick={handleNextStep}
-                  disabled={isSubmitting}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-full font-bold px-5 py-2.5 text-sm h-10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: accentColorBtn, color: '#151515' }}
-                >
-                  {isSubmitting && (
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  )}
-                  {isLastStep ? t('wizard.submit', lang) : t('wizard.next', lang)}
-                  {!isLastStep && <ChevronRight size={16} />}
-                  {isLastStep && <CheckCircle size={16} />}
-                </button>
+                {/* Next / Save brief button */}
+                {isLastStep ? (
+                  <button
+                    onClick={handleNextStep}
+                    disabled={isSubmitting}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-full font-bold px-5 py-2.5 text-sm h-10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: accentColorBtn, color: '#151515' }}
+                  >
+                    {isSubmitting && (
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {lang === 'pl' ? 'Zapisz brief' : 'Save brief'}
+                    <CheckCircle size={16} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleNextStep}
+                    disabled={isSubmitting}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-full font-bold px-5 py-2.5 text-sm h-10 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: accentColorBtn, color: '#151515' }}
+                  >
+                    {t('wizard.next', lang)}
+                    <ChevronRight size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

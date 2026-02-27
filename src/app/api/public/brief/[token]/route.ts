@@ -124,7 +124,6 @@ export async function PATCH(
   // Prepare update data
   const updateData: Record<string, any> = {
     wizard_data: wizardData,
-    status: 'in_progress',
     started_at: brief.started_at || new Date().toISOString(),
   }
 
@@ -142,7 +141,11 @@ export async function PATCH(
   if (body.is_final === true) {
     updateData.status = 'completed'
     updateData.completed_at = new Date().toISOString()
+  } else if (brief.status !== 'completed') {
+    // Only set in_progress if brief is not already completed (edit mode)
+    updateData.status = 'in_progress'
   }
+  // If editing a completed brief (auto-save), keep status as 'completed'
 
   const { error: updateError } = await adminClient
     .from('briefs')
